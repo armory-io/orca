@@ -19,9 +19,11 @@ package com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support
 import groovy.transform.InheritConstructors
 import groovy.transform.ToString
 import groovy.util.logging.Slf4j
-import com.netflix.frigga.Names
+import com.netflix.spinnaker.moniker.Moniker
 import com.netflix.spinnaker.orca.kato.pipeline.support.StageData
 import com.netflix.spinnaker.orca.pipeline.model.Stage
+
+import javax.management.monitor.Monitor
 
 /**
  * A TargetServerGroup is a ServerGroup that is dynamically resolved using a target like "current" or "oldest".
@@ -200,16 +202,17 @@ class TargetServerGroup {
     Target target
     String cluster
 
+    Moniker moniker
     String credentials
     List<Location> locations
     String cloudProvider = "aws"
 
     String getApp() {
-      Names.parseName(serverGroupName ?: cluster)?.app
+      moniker?.app
     }
 
     String getCluster() {
-      cluster ?: Names.parseName(serverGroupName)?.cluster
+      cluster ?: moniker?.cluster
     }
 
     static Params fromStage(Stage stage) {

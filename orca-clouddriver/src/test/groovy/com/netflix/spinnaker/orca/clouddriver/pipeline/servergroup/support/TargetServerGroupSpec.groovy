@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support
 
 import com.netflix.spinnaker.orca.pipeline.model.Stage
+import com.netflix.spinnaker.moniker.Moniker
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -90,6 +91,7 @@ class TargetServerGroupSpec extends Specification {
         serverGroupName: serverGroupName,
         cloudProvider  : provider,
         cluster        : cluster,
+        moniker        : moniker,
         regions        : regions,
         region         : region,
         target         : target,
@@ -105,18 +107,17 @@ class TargetServerGroupSpec extends Specification {
       p.cluster == "test-app"
 
     where:
-      serverGroupName | target        | cluster    | zones            | regions        | region       | provider | locations
-      "test-app-v001" | null          | null       | ["north-pole-1"] | null           | null         | "gce"    | [new Location(type: Location.Type.ZONE, value:"north-pole-1")]
+      serverGroupName | target        | cluster    | moniker |zones                                | regions        | region       | provider | locations
+      "test-app-v001" | null          | null       | new Moniker("test", "test-app", "", "app", 1) | ["north-pole-1"] | null           | null         | "gce"    | [new Location(type: Location.Type.ZONE, value:"north-pole-1")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | null             | ["north-pole"] | null         | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | null             | ["north-pole"] | null         | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | ["north-pole-1"] | ["north-pole"] | null         | "gce"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | ["north-pole-1"] | ["north-pole"] | null         | "aws"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
 
-      "test-app-v001" | "current_asg" | "test-app" | null             | ["north-pole"] | null         | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
-      "test-app-v001" | "current_asg" | "test-app" | null             | ["north-pole"] | null         | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
-      "test-app-v001" | "current_asg" | "test-app" | ["north-pole-1"] | ["north-pole"] | null         | "gce"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
-      "test-app-v001" | "current_asg" | "test-app" | ["north-pole-1"] | ["north-pole"] | null         | "aws"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
-
-      "test-app-v001" | "current_asg" | "test-app" | null             | null           | "north-pole" | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
-      "test-app-v001" | "current_asg" | "test-app" | null             | null           | "north-pole" | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
-      "test-app-v001" | "current_asg" | "test-app" | ["north-pole-1"] | null           | "north-pole" | "gce"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
-      "test-app-v001" | "current_asg" | "test-app" | ["north-pole-1"] | null           | "north-pole" | "aws"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | null             | null           | "north-pole" | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | null             | null           | "north-pole" | null     | [new Location(type: Location.Type.REGION, value:"north-pole")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | ["north-pole-1"] | null           | "north-pole" | "gce"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
+      "test-app-v001" | "current_asg" | "test-app" | new Moniker("test", "test-app", "", "app", 1) | ["north-pole-1"] | null           | "north-pole" | "aws"    | [new Location(type: Location.Type.REGION, value:"north-pole")]
 
   }
 }
