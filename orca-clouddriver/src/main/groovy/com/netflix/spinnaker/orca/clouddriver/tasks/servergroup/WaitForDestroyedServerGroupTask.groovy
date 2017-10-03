@@ -17,7 +17,7 @@
 package com.netflix.spinnaker.orca.clouddriver.tasks.servergroup
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.netflix.frigga.Names
+import com.netflix.spinnaker.moniker.Moniker
 import com.netflix.spinnaker.orca.ExecutionStatus
 import com.netflix.spinnaker.orca.RetryableTask
 import com.netflix.spinnaker.orca.TaskResult
@@ -48,9 +48,9 @@ class WaitForDestroyedServerGroupTask extends AbstractCloudProviderAwareTask imp
     String account = getCredentials(stage)
     String serverGroupRegion = (stage.context.regions as Collection)?.getAt(0) ?: stage.context.region
     String serverGroupName = (stage.context.serverGroupName ?: stage.context.asgName) as String // TODO: Retire asgName
-    Names names = Names.parseName(serverGroupName)
+    Moniker moniker = stage.context.moniker
     try {
-      def response = oortService.getCluster(names.app, account, names.cluster, cloudProvider)
+      def response = oortService.getCluster(moniker.app, account, moniker.cluster, cloudProvider)
 
       if (response.status != 200) {
         return new TaskResult(ExecutionStatus.RUNNING)

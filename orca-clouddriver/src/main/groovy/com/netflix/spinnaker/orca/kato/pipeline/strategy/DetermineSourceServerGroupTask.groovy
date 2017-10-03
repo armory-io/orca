@@ -67,6 +67,7 @@ class DetermineSourceServerGroupTask implements RetryableTask {
         stageOutputs.source = [
           asgName          : source.asgName,
           serverGroupName  : source.serverGroupName,
+          moniker          : source.moniker,
           account          : source.account,
           region           : source.region,
           useSourceCapacity: useSourceCapacity

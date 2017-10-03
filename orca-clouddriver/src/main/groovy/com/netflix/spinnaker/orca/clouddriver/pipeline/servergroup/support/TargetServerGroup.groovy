@@ -81,6 +81,7 @@ class TargetServerGroup {
       accountName    : account,
       serverGroupName: serverGroup.name,
       asgName        : serverGroup.name,
+      moniker        : serverGroup.moniker,
       cloudProvider  : serverGroup.cloudProvider ?: serverGroup.type
     ]
 

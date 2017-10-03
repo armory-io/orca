@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import com.netflix.frigga.Names;
+import com.netflix.spinnaker.moniker.Moniker;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
@@ -97,12 +97,8 @@ public class DetermineHealthProvidersTask implements RetryableTask, CloudProvide
 
     try {
       String applicationName = (String) stage.getContext().get("application");
-      if (applicationName == null && stage.getContext().containsKey("serverGroupName")) {
-        applicationName = Names.parseName((String) stage.getContext().get("serverGroupName")).getApp();
-      } else if (applicationName == null && stage.getContext().containsKey("asgName")) {
-        applicationName = Names.parseName((String) stage.getContext().get("asgName")).getApp();
-      } else if (applicationName == null && stage.getContext().containsKey("cluster")) {
-        applicationName = Names.parseName((String) stage.getContext().get("cluster")).getApp();
+      if (applicationName == null && stage.getContext().containsKey("moniker")) {
+        applicationName =((Moniker) stage.getContext().get("moniker")).getApp();
       }
 
       if (front50Service == null) {

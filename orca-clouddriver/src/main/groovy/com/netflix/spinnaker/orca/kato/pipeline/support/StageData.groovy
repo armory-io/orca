@@ -17,6 +17,7 @@
 package com.netflix.spinnaker.orca.kato.pipeline.support
 
 import com.netflix.frigga.autoscaling.AutoScalingGroupNameBuilder
+import com.netflix.spinnaker.moniker.Moniker
 
 class StageData {
   String strategy
@@ -77,11 +78,16 @@ class StageData {
     return preferSourceCapacity ?: false
   }
 
+  Moniker getMoniker() {
+    source?.moniker
+  }
+
   static class Source {
     String account
     String region
     String asgName
     String serverGroupName
+    Moniker moniker
     Boolean useSourceCapacity
     Boolean preferSourceCapacity
   }

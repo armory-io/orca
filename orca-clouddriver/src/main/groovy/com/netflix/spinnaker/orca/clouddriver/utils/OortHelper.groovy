@@ -27,6 +27,7 @@ import retrofit.client.Response
 import retrofit.converter.ConversionException
 import retrofit.converter.JacksonConverter
 
+
 /**
  * Helper methods for filtering Cluster/ASG/Instance information from Oort
  */
