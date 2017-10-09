@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support
 
+import com.netflix.spinnaker.moniker.Moniker
 import groovy.transform.InheritConstructors
 import groovy.transform.ToString
 import groovy.util.logging.Slf4j
@@ -196,6 +197,8 @@ class TargetServerGroup {
     // server group name to fetch?
     String serverGroupName
 
+    Moniker moniker
+
     // Alternatively to asgName, the combination of target and cluster can be used.
     Target target
     String cluster
@@ -205,11 +208,11 @@ class TargetServerGroup {
     String cloudProvider = "aws"
 
     String getApp() {
-      Names.parseName(serverGroupName ?: cluster)?.app
+      moniker?.app ?: Names.parseName(serverGroupName ?: cluster)?.app
     }
 
     String getCluster() {
-      cluster ?: Names.parseName(serverGroupName)?.cluster
+      moniker?.cluster ?: cluster ?: Names.parseName(serverGroupName)?.cluster
     }
 
     static Params fromStage(Stage stage) {

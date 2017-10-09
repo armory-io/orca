@@ -204,7 +204,7 @@ abstract class AbstractInstancesCheckTask extends AbstractCloudProviderAwareTask
       return cluster.serverGroups ?: []
     } else {
       def region = serverGroupsByRegion.keySet()[0]
-      def response = oortService.getServerGroup(names.app, account, region, names.group)
+      def response = oortService.getServerGroupFromName(account, region, names.group)
       def serverGroup = objectMapper.readValue(response.body.in().text, Map)
       return [serverGroup]
     }
