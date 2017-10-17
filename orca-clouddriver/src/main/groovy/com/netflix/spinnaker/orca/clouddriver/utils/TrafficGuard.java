@@ -40,6 +40,12 @@ public class TrafficGuard {
 
   private final Front50Service front50Service;
 
+  // TODO: Moniker should be passed to TrafficGuard from the upstream stage.
+  private Moniker newMonikerFromClusterName(String clusterName) {
+    Names names = Names.parseName(clusterName);
+    return new Moniker(names.getApp(), names.getCluster(), names.getDetail(), names.getStack(), names.getSequence());
+  }
+
   @Autowired
   public TrafficGuard(OortHelper oortHelper, Optional<Front50Service> front50Service) {
     this.oortHelper = oortHelper;
@@ -67,8 +73,7 @@ public class TrafficGuard {
 
     instancesPerServerGroup.entrySet().forEach(entry -> {
       String serverGroupName = entry.getKey();
-      Names names = Names.parseName(serverGroupName);
-      if (hasDisableLock(names.getCluster(), account, location)) {
+      if (hasDisableLock(newMonikerFromClusterName(serverGroupName), account, location)) {
         Optional<TargetServerGroup> targetServerGroup = oortHelper.getTargetServerGroup(account, serverGroupName, location.getValue(), cloudProvider);
 
         targetServerGroup.ifPresent(serverGroup -> {
@@ -92,9 +97,7 @@ public class TrafficGuard {
   }
 
   public void verifyTrafficRemoval(String serverGroupName, String account, Location location, String cloudProvider, String operationDescriptor) {
-    Names names = Names.parseName(serverGroupName);
-
-    if (!hasDisableLock(names.getCluster(), account, location)) {
+    if (!hasDisableLock(newMonikerFromClusterName(serverGroupName), account, location)) {
       return;
     }
 
@@ -124,15 +127,14 @@ public class TrafficGuard {
     }
   }
 
-  public boolean hasDisableLock(String cluster, String account, Location location) {
+  public boolean hasDisableLock(Moniker clusterMoniker, String account, Location location) {
     if (front50Service == null) {
       log.warn("Front50 has not been configured, no way to check disable lock. Fix this by setting front50.enabled: true");
       return false;
     }
-    Names names = Names.parseName(cluster);
     Application application;
     try {
-      application = front50Service.get(names.getApp());
+      application = front50Service.get(clusterMoniker.getApp());
     } catch (RetrofitError e) {
       if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
         application = null;
@@ -147,8 +149,6 @@ public class TrafficGuard {
     List<ClusterMatchRule> rules = trafficGuards.stream().map(guard ->
       new ClusterMatchRule(guard.get("account"), guard.get("location"), guard.get("stack"), guard.get("detail"), 1)
     ).collect(Collectors.toList());
-    // TODO: Moniker should be passed into TrafficGuard from the stage that calls it.
-    Moniker clusterMoniker = new Moniker(names.getApp(), names.getCluster(), names.getDetail(), names.getStack(), names.getSequence());
-    return ClusterMatcher.getMatchingRule(account, location.getValue(), cluster, clusterMoniker, rules) != null;
+    return ClusterMatcher.getMatchingRule(account, location.getValue(), clusterMoniker, rules) != null;
   }
 }

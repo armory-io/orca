@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 public class ClusterMatcher {
 
-  public static ClusterMatchRule getMatchingRule(String account, String location, String clusterName, Moniker clusterMoniker, List<ClusterMatchRule> rules) {
+  public static ClusterMatchRule getMatchingRule(String account, String location, Moniker clusterMoniker, List<ClusterMatchRule> rules) {
     if (!Optional.ofNullable(rules).isPresent()) {
       return null;
     }
