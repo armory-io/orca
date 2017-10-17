@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.orca.clouddriver.utils
 
+import com.netflix.spinnaker.moniker.Moniker
 import com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support.Location
 import com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support.Location.Type
 import com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support.TargetServerGroup
@@ -164,7 +165,7 @@ class TrafficGuardSpec extends Specification {
     addGuard([account: guardAccount, stack: guardStack, detail: guardDetail, location: guardLocation])
 
     when:
-    boolean result = trafficGuard.hasDisableLock(cluster, account, location)
+    boolean result = trafficGuard.hasDisableLock(new Moniker(app: cluster, cluster:cluster), account, location)
 
     then:
     result == expected
@@ -186,7 +187,7 @@ class TrafficGuardSpec extends Specification {
 
   void "hasDisableLock returns false on missing applications"() {
     when:
-    boolean result = trafficGuard.hasDisableLock("app", "test", location)
+    boolean result = trafficGuard.hasDisableLock(new Moniker(app:"app", cluster: "app"), "test", location)
 
     then:
     result == false
@@ -195,7 +196,7 @@ class TrafficGuardSpec extends Specification {
 
   void "hasDisableLock returns false on applications with no guards configured"() {
     when:
-    boolean result = trafficGuard.hasDisableLock("app", "test", location)
+    boolean result = trafficGuard.hasDisableLock(new Moniker(app:"app", cluster: "app"), "test", location)
 
     then:
     !applicationDetails.containsKey("trafficGuards")
@@ -208,7 +209,7 @@ class TrafficGuardSpec extends Specification {
   void "throws exception if application retrieval throws an exception"() {
     when:
     Exception thrownException = new RuntimeException("bad read")
-    trafficGuard.hasDisableLock("app", "test", location)
+    trafficGuard.hasDisableLock(new Moniker(app:"app", cluster: "app"), "test", location)
 
     then:
     thrown(RuntimeException)
@@ -220,7 +221,7 @@ class TrafficGuardSpec extends Specification {
   void "hasDisableLock returns false on applications with empty guards configured"() {
     when:
     applicationDetails.put("trafficGuards", [])
-    boolean result = trafficGuard.hasDisableLock("app", "test", location)
+    boolean result = trafficGuard.hasDisableLock(new Moniker(app:"app", cluster: "app"), "test", location)
 
     then:
     result == false
