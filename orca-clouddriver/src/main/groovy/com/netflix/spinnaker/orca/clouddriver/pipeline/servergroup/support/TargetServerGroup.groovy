@@ -29,7 +29,8 @@ import com.netflix.spinnaker.orca.pipeline.model.Stage
  */
 class TargetServerGroup {
   // Delegates all Map interface calls to this object.
-  @Delegate private final Map<String, Object> serverGroup
+  @Delegate
+  private final Map<String, Object> serverGroup
 
   TargetServerGroup(Map<String, Object> serverGroupData) {
     if (serverGroupData.instances && serverGroupData.instances instanceof Collection) {
@@ -73,14 +74,23 @@ class TargetServerGroup {
     return (serverGroup.instances ?: []) as List<Map>
   }
 
+  /**
+   * Used in TrafficGuard, which is Java, which doesn't play nice with @Delegate
+   */
+  Moniker getMoniker() {
+    return serverGroup.moniker
+  }
+
+
   Map toClouddriverOperationPayload(String account) {
     //TODO(cfieber) - add an endpoint on Clouddriver to do provider appropriate conversion of a TargetServerGroup
     def op = [
-      credentials    : account,
-      accountName    : account,
-      serverGroupName: serverGroup.name,
-      asgName        : serverGroup.name,
-      cloudProvider  : serverGroup.cloudProvider ?: serverGroup.type
+      credentials       : account,
+      accountName       : account,
+      serverGroupName   : serverGroup.name,
+      serverGroupMoniker: serverGroup.moniker,
+      asgName           : serverGroup.name,
+      cloudProvider     : serverGroup.cloudProvider ?: serverGroup.type
     ]
 
     def loc = getLocation()
@@ -173,19 +183,21 @@ class TargetServerGroup {
       /**
        * "Previous Server Group"
        */
-      ancestor_asg_dynamic,
+        ancestor_asg_dynamic,
       /**
        * "Oldest Server Group"
        */
-      oldest_asg_dynamic,
+        oldest_asg_dynamic,
       /**
        * "(Deprecated) Current Server Group"
        */
-      @Deprecated current_asg,
+        @Deprecated
+        current_asg,
       /**
        * "(Deprecated) Last Server Group"
        */
-      @Deprecated ancestor_asg,
+        @Deprecated
+        ancestor_asg,
 
       boolean isDynamic() {
         return this.name().endsWith("dynamic")

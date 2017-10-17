@@ -81,7 +81,7 @@ public class TrafficGuard {
           if (thisInstance.isPresent() && "Up".equals(thisInstance.get().get("healthState"))) {
             long otherActiveInstances = serverGroup.getInstances().stream().filter(i -> "Up".equals(i.get("healthState")) && !entry.getValue().contains(i.get("name"))).count();
             if (otherActiveInstances == 0) {
-              verifyOtherServerGroupsAreTakingTraffic(serverGroupName, location, account, cloudProvider, operationDescriptor);
+              verifyOtherServerGroupsAreTakingTraffic(serverGroupName, serverGroup.getMoniker(), location, account, cloudProvider, operationDescriptor);
             }
           }
         });
@@ -101,15 +101,14 @@ public class TrafficGuard {
       return;
     }
 
-    verifyOtherServerGroupsAreTakingTraffic(serverGroupName, location, account, cloudProvider, operationDescriptor);
+    verifyOtherServerGroupsAreTakingTraffic(serverGroupName, newMonikerFromClusterName(serverGroupName),location, account, cloudProvider, operationDescriptor);
   }
 
-  private void verifyOtherServerGroupsAreTakingTraffic(String serverGroupName, Location location, String account, String cloudProvider, String operationDescriptor) {
-    Names names = Names.parseName(serverGroupName);
-    Optional<Map> cluster = oortHelper.getCluster(names.getApp(), account, names.getCluster(), cloudProvider);
+  private void verifyOtherServerGroupsAreTakingTraffic(String serverGroupName, Moniker serverGroupMoniker, Location location, String account, String cloudProvider, String operationDescriptor) {
+    Optional<Map> cluster = oortHelper.getCluster(serverGroupMoniker.getApp(), account, serverGroupMoniker.getCluster(), cloudProvider);
 
     if (!cluster.isPresent()) {
-      throw new IllegalStateException(format("Could not find cluster '%s' in %s/%s with traffic guard configured.", names.getCluster(), account, location.getValue()));
+      throw new IllegalStateException(format("Could not find cluster '%s' in %s/%s with traffic guard configured.", serverGroupMoniker.getCluster(), account, location.getValue()));
     }
     List<TargetServerGroup> targetServerGroups = ((List<Map<String, Object>>) cluster.get().get("serverGroups"))
       .stream()
@@ -123,7 +122,7 @@ public class TrafficGuard {
     );
     if (!otherEnabledServerGroupFound) {
       throw new IllegalStateException(format("This cluster ('%s' in %s/%s) has traffic guards enabled. " +
-        "%s %s would leave the cluster with no instances taking traffic.", names.getCluster(), account, location.getValue(), operationDescriptor, serverGroupName));
+        "%s %s would leave the cluster with no instances taking traffic.", serverGroupMoniker.getCluster(), account, location.getValue(), operationDescriptor, serverGroupName));
     }
   }
 
