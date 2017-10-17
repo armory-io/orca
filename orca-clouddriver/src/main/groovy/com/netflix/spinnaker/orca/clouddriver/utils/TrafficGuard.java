@@ -19,11 +19,11 @@ package com.netflix.spinnaker.orca.clouddriver.utils;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.netflix.frigga.Names;
+import com.netflix.spinnaker.moniker.Moniker;
 import com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support.Location;
 import com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support.TargetServerGroup;
 import com.netflix.spinnaker.orca.front50.Front50Service;
 import com.netflix.spinnaker.orca.front50.model.Application;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,6 +147,8 @@ public class TrafficGuard {
     List<ClusterMatchRule> rules = trafficGuards.stream().map(guard ->
       new ClusterMatchRule(guard.get("account"), guard.get("location"), guard.get("stack"), guard.get("detail"), 1)
     ).collect(Collectors.toList());
-    return ClusterMatcher.getMatchingRule(account, location.getValue(), cluster, rules) != null;
+    // TODO: Moniker should be passed into TrafficGuard from the stage that calls it.
+    Moniker clusterMoniker = new Moniker(names.getApp(), names.getCluster(), names.getDetail(), names.getStack(), names.getSequence());
+    return ClusterMatcher.getMatchingRule(account, location.getValue(), cluster, clusterMoniker, rules) != null;
   }
 }
