@@ -234,7 +234,7 @@ class TrafficGuardSpec extends Specification {
     targetServerGroup.instances = [[name: "i-1", healthState: "Up"], [name: "i-2", healthState: "Down"]]
 
     when:
-    trafficGuard.verifyInstanceTermination(null, ["i-1"], "test", location, "aws", "x")
+    trafficGuard.verifyInstanceTermination("app-foo", new Moniker(app:"app", cluster: "app-foo"), ["i-1"], "test", location, "aws", "x")
 
     then:
     thrown(IllegalStateException)

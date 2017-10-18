@@ -53,6 +53,7 @@ public class TrafficGuard {
   }
 
   public void verifyInstanceTermination(String serverGroupNameFromStage,
+                                        Moniker serverGroupMonikerFromStage,
                                         List<String> instanceIds,
                                         String account,
                                         Location location,
@@ -73,7 +74,7 @@ public class TrafficGuard {
 
     instancesPerServerGroup.entrySet().forEach(entry -> {
       String serverGroupName = entry.getKey();
-      if (hasDisableLock(newMonikerFromClusterName(serverGroupName), account, location)) {
+      if (hasDisableLock(serverGroupMonikerFromStage, account, location)) {
         Optional<TargetServerGroup> targetServerGroup = oortHelper.getTargetServerGroup(account, serverGroupName, location.getValue(), cloudProvider);
 
         targetServerGroup.ifPresent(serverGroup -> {
