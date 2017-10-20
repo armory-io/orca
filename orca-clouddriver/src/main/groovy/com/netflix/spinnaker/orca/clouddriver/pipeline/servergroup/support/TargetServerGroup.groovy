@@ -85,12 +85,12 @@ class TargetServerGroup {
   Map toClouddriverOperationPayload(String account) {
     //TODO(cfieber) - add an endpoint on Clouddriver to do provider appropriate conversion of a TargetServerGroup
     def op = [
-      credentials       : account,
-      accountName       : account,
-      serverGroupName   : serverGroup.name,
-      serverGroupMoniker: serverGroup.moniker,
-      asgName           : serverGroup.name,
-      cloudProvider     : serverGroup.cloudProvider ?: serverGroup.type
+      credentials    : account,
+      accountName    : account,
+      serverGroupName: serverGroup.name,
+      moniker        : serverGroup.moniker,
+      asgName        : serverGroup.name,
+      cloudProvider  : serverGroup.cloudProvider ?: serverGroup.type
     ]
 
     def loc = getLocation()

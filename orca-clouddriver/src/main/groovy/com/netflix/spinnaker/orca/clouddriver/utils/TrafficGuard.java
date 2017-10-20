@@ -40,12 +40,6 @@ public class TrafficGuard {
 
   private final Front50Service front50Service;
 
-  // TODO: Moniker should be passed to TrafficGuard from the upstream stage.
-  private Moniker newMonikerFromClusterName(String clusterName) {
-    Names names = Names.parseName(clusterName);
-    return new Moniker(names.getApp(), names.getCluster(), names.getDetail(), names.getStack(), names.getSequence());
-  }
-
   @Autowired
   public TrafficGuard(OortHelper oortHelper, Optional<Front50Service> front50Service) {
     this.oortHelper = oortHelper;
@@ -97,12 +91,12 @@ public class TrafficGuard {
     return Optional.ofNullable((String) instance.orElse(new HashMap<>()).get("serverGroup"));
   }
 
-  public void verifyTrafficRemoval(String serverGroupName, String account, Location location, String cloudProvider, String operationDescriptor) {
-    if (!hasDisableLock(newMonikerFromClusterName(serverGroupName), account, location)) {
+  public void verifyTrafficRemoval(String serverGroupName, Moniker serverGroupMoniker, String account, Location location, String cloudProvider, String operationDescriptor) {
+    if (!hasDisableLock(serverGroupMoniker, account, location)) {
       return;
     }
 
-    verifyOtherServerGroupsAreTakingTraffic(serverGroupName, newMonikerFromClusterName(serverGroupName),location, account, cloudProvider, operationDescriptor);
+    verifyOtherServerGroupsAreTakingTraffic(serverGroupName, serverGroupMoniker,location, account, cloudProvider, operationDescriptor);
   }
 
   private void verifyOtherServerGroupsAreTakingTraffic(String serverGroupName, Moniker serverGroupMoniker, Location location, String account, String cloudProvider, String operationDescriptor) {
