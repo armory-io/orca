@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.strategies
 
+import com.netflix.spinnaker.moniker.Moniker
 import com.netflix.spinnaker.orca.clouddriver.pipeline.cluster.DisableClusterStage
 import com.netflix.spinnaker.orca.clouddriver.pipeline.cluster.ScaleDownClusterStage
 import com.netflix.spinnaker.orca.clouddriver.pipeline.cluster.ShrinkClusterStage
@@ -32,79 +33,82 @@ class RedBlackStrategySpec extends Specification {
 
   def "should compose flow"() {
     given:
-      def ctx = [
-          account          : "testAccount",
-          application      : "unit",
-          stack            : "tests",
-          cloudProvider    : "aws",
-          region           : "north",
-          availabilityZones: [
-              north: ["pole-1a"]
-          ]
+    Moniker moniker = new Moniker(app: "unit", stack: "test");
+    def ctx = [
+      account          : "testAccount",
+      application      : "unit",
+      stack            : "tests",
+      moniker          : moniker,
+      cloudProvider    : "aws",
+      region           : "north",
+      availabilityZones: [
+        north: ["pole-1a"]
       ]
+    ]
     def stage = new Stage<>(new Pipeline("orca"), "whatever", ctx)
-      def strat = new RedBlackStrategy(shrinkClusterStage: shrinkClusterStage,
-                                       scaleDownClusterStage: scaleDownClusterStage,
-                                       disableClusterStage: disableClusterStage)
+    def strat = new RedBlackStrategy(shrinkClusterStage: shrinkClusterStage,
+      scaleDownClusterStage: scaleDownClusterStage,
+      disableClusterStage: disableClusterStage)
 
     when:
-      def syntheticStages = strat.composeFlow(stage)
-      def beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
-      def afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
+    def syntheticStages = strat.composeFlow(stage)
+    def beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
+    def afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
 
     then:
-      beforeStages.isEmpty()
-      afterStages.size() == 1
-      afterStages.first().type == disableClusterStage.type
-      afterStages.first().context == [
-          credentials                   : "testAccount",
-          cloudProvider                 : "aws",
-          cluster                       : "unit-tests",
-          region                        : "north",
-          remainingEnabledServerGroups  : 1,
-          preferLargerOverNewer         : false,
-      ]
+    beforeStages.isEmpty()
+    afterStages.size() == 1
+    afterStages.first().type == disableClusterStage.type
+    afterStages.first().context == [
+      credentials                   : "testAccount",
+      cloudProvider                 : "aws",
+      cluster                       : "unit-tests",
+      moniker                       : moniker,
+      region                        : "north",
+      remainingEnabledServerGroups  : 1,
+      preferLargerOverNewer         : false,
+    ]
 
     when:
-      ctx.maxRemainingAsgs = 10
+    ctx.maxRemainingAsgs = 10
     stage = new Stage<>(new Pipeline("orca"), "whatever", ctx)
-      syntheticStages = strat.composeFlow(stage)
-      beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
-      afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
+    syntheticStages = strat.composeFlow(stage)
+    beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
+    afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
 
     then:
-      beforeStages.isEmpty()
-      afterStages.size() == 2
-      afterStages.first().type == shrinkClusterStage.type
-      afterStages.first().context.shrinkToSize == 10
-      afterStages.last().type == disableClusterStage.type
+    beforeStages.isEmpty()
+    afterStages.size() == 2
+    afterStages.first().type == shrinkClusterStage.type
+    afterStages.first().context.shrinkToSize == 10
+    afterStages.last().type == disableClusterStage.type
 
     when:
-      ctx.scaleDown = true
+    ctx.scaleDown = true
     stage = new Stage<>(new Pipeline("orca"), "whatever", ctx)
-      syntheticStages = strat.composeFlow(stage)
-      beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
-      afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
+    syntheticStages = strat.composeFlow(stage)
+    beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
+    afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
 
     then:
-      beforeStages.isEmpty()
-      afterStages.size() == 3
-      afterStages[0].type == shrinkClusterStage.type
-      afterStages[1].type == disableClusterStage.type
-      afterStages[2].type == scaleDownClusterStage.type
-      afterStages[2].context.allowScaleDownActive == false
+    beforeStages.isEmpty()
+    afterStages.size() == 3
+    afterStages[0].type == shrinkClusterStage.type
+    afterStages[1].type == disableClusterStage.type
+    afterStages[2].type == scaleDownClusterStage.type
+    afterStages[2].context.allowScaleDownActive == false
 
     when:
-      ctx.interestingHealthProviderNames = ["Google"]
+    ctx.interestingHealthProviderNames = ["Google"]
     stage = new Stage<>(new Pipeline("orca"), "whatever", ctx)
-      syntheticStages = strat.composeFlow(stage)
-      beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
-      afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
+    syntheticStages = strat.composeFlow(stage)
+    beforeStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_BEFORE }
+    afterStages = syntheticStages.findAll { it.syntheticStageOwner == SyntheticStageOwner.STAGE_AFTER }
 
     then:
-      beforeStages.isEmpty()
-      afterStages.size() == 3
-      afterStages.first().type == shrinkClusterStage.type
-      afterStages.first().context.interestingHealthProviderNames == ["Google"]
+    beforeStages.isEmpty()
+    afterStages.size() == 3
+    afterStages.first().type == shrinkClusterStage.type
+    afterStages.first().context.interestingHealthProviderNames == ["Google"]
   }
 }

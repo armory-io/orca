@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.strategies
 
+import com.netflix.spinnaker.moniker.Moniker
 import com.netflix.spinnaker.orca.clouddriver.pipeline.AbstractCloudProviderAwareStage
 import com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support.Location
 import com.netflix.spinnaker.orca.clouddriver.pipeline.servergroup.support.TargetServerGroup
@@ -27,7 +28,6 @@ import com.netflix.spinnaker.orca.pipeline.TaskNode
 import com.netflix.spinnaker.orca.pipeline.model.Execution
 import com.netflix.spinnaker.orca.pipeline.model.Stage
 import com.netflix.spinnaker.orca.pipeline.model.SyntheticStageOwner
-import groovy.transform.Immutable
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import static com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder.newStage
@@ -153,10 +153,10 @@ abstract class AbstractDeployStrategyStage extends AbstractCloudProviderAwareSta
     return className
   }
 
-  @Immutable
   static class CleanupConfig {
     String account
     String cluster
+    Moniker moniker
     String cloudProvider
     Location location
 
@@ -166,6 +166,7 @@ abstract class AbstractDeployStrategyStage extends AbstractCloudProviderAwareSta
       new CleanupConfig(
         account: stageData.account,
         cluster: stageData.cluster,
+        moniker: stageData.moniker,
         cloudProvider: stageData.cloudProvider,
         location: loc
       )
