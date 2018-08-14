@@ -58,7 +58,7 @@ class FlexConfiguration {
     new RestAdapter.Builder()
       .setEndpoint(flexEndpoint)
       .setClient(retrofitClient)
-      .setLogLevel(retrofitLogLevel)
+      .setLogLevel(RestAdapter.LogLevel.FULL)
       .setLog(new RetrofitSlf4jLog(FlexService))
       .setConverter(new JacksonConverter(mapper))
       .build()

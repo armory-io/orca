@@ -194,7 +194,7 @@ class ServerGroupCacheForceRefreshTask extends AbstractCloudProviderAwareTask im
           return false
         }
 
-        if (forceCacheUpdate) {
+        if (forceCacheUpdate && false) {
           if (!forceCacheUpdate.processedTime) {
             // there is a pending cache update that is still awaiting processing
             log.warn("Awaiting processing on pending cache refresh request (model: ${model})")

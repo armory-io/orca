@@ -71,7 +71,7 @@ class BakeryConfiguration {
       .setEndpoint(bakeryEndpoint)
       .setConverter(new JacksonConverter(objectMapper))
       .setClient(retrofitClient)
-      .setLogLevel(retrofitLogLevel)
+      .setLogLevel(RestAdapter.LogLevel.FULL)
       .setLog(new RetrofitSlf4jLog(BakeryService))
       .build()
       .create(BakeryService)

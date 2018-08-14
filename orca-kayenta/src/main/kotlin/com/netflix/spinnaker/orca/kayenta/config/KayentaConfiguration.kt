@@ -70,7 +70,7 @@ class KayentaConfiguration {
       .setRequestInterceptor(spinnakerRequestInterceptor)
       .setEndpoint(kayentaEndpoint)
       .setClient(retrofitClient)
-      .setLogLevel(retrofitLogLevel)
+      .setLogLevel(RestAdapter.LogLevel.FULL)
       .setLog(RetrofitSlf4jLog(KayentaService::class.java))
       .setConverter(JacksonConverter(mapper))
       .build()

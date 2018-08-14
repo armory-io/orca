@@ -98,7 +98,7 @@ class CloudDriverConfiguration {
           .setRequestInterceptor(spinnakerRequestInterceptor)
           .setEndpoint(newFixedEndpoint(url))
           .setClient(retrofitClient)
-          .setLogLevel(retrofitLogLevel)
+          .setLogLevel(RestAdapter.LogLevel.FULL)
           .setLog(new RetrofitSlf4jLog(type))
           .setConverter(new JacksonConverter(objectMapper))
           .build()

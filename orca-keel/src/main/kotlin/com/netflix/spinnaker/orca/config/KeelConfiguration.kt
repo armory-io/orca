@@ -52,7 +52,7 @@ class KeelConfiguration {
     = RestAdapter.Builder()
       .setEndpoint(keelEndpoint)
       .setClient(retrofitClient)
-      .setLogLevel(retrofitLogLevel)
+      .setLogLevel(RestAdapter.LogLevel.FULL)
       .setConverter(JacksonConverter(keelObjectMapper))
       .build()
       .create(KeelService::class.java)

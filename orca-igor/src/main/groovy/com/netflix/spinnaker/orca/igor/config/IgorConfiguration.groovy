@@ -56,7 +56,7 @@ class IgorConfiguration {
     new RestAdapter.Builder()
       .setEndpoint(igorEndpoint)
       .setClient(retrofitClient)
-      .setLogLevel(retrofitLogLevel)
+      .setLogLevel(RestAdapter.LogLevel.FULL)
       .setLog(new RetrofitSlf4jLog(IgorService))
       .setConverter(new JacksonConverter(mapper))
       .build()

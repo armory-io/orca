@@ -1056,6 +1056,8 @@ public class RedisExecutionRepository implements ExecutionRepository, PollingAge
     final List<String> stageIds = new ArrayList<>();
 
     delegate.withTransaction(tx -> {
+        log.info("RedisExecutionRepository.java:retrieveInternal:1114");
+        log.info(key);
         Response<Map<String, String>> execResponse = tx.hgetAll(key);
         Response<List<String>> indexResponse = tx.lrange(indexKey, 0, -1);
         tx.exec();

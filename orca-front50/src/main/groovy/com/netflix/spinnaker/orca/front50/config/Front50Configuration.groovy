@@ -73,7 +73,7 @@ class Front50Configuration {
       .setRequestInterceptor(spinnakerRequestInterceptor)
       .setEndpoint(front50Endpoint)
       .setClient(retrofitClient)
-      .setLogLevel(retrofitLogLevel)
+      .setLogLevel(RestAdapter.LogLevel.FULL)
       .setLog(new RetrofitSlf4jLog(Front50Service))
       .setConverter(new JacksonConverter(mapper))
       .build()
