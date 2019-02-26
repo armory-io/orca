@@ -37,6 +37,7 @@ import com.netflix.spinnaker.orca.igor.config.IgorConfiguration
 import com.netflix.spinnaker.orca.kayenta.config.KayentaConfiguration
 import com.netflix.spinnaker.orca.mine.config.MineConfiguration
 import com.netflix.spinnaker.orca.web.config.WebConfiguration
+import com.netflix.spinnaker.orca.plugin.config.PluginConfiguration
 import com.netflix.spinnaker.orca.webhook.config.WebhookConfiguration
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration
@@ -77,6 +78,7 @@ import org.springframework.scheduling.annotation.EnableAsync
   PipelineTemplateConfiguration,
   KayentaConfiguration,
   WebhookConfiguration,
+  PluginConfiguration,
   KeelConfiguration,
   QosConfiguration
 ])
