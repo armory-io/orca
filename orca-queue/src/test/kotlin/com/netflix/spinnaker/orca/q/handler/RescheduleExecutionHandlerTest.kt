@@ -18,7 +18,6 @@ package com.netflix.spinnaker.orca.q.handler
 
 import com.netflix.spinnaker.orca.ExecutionStatus
 import com.netflix.spinnaker.orca.Task
-import com.netflix.spinnaker.orca.TaskResolver
 import com.netflix.spinnaker.orca.fixture.pipeline
 import com.netflix.spinnaker.orca.fixture.stage
 import com.netflix.spinnaker.orca.fixture.task
@@ -36,10 +35,9 @@ object RescheduleExecutionHandlerTest : SubjectSpek<RescheduleExecutionHandler>(
 
   val queue: Queue = mock()
   val repository: ExecutionRepository = mock()
-  val taskResolver = TaskResolver(emptyList())
 
   subject(CachingMode.GROUP) {
-    RescheduleExecutionHandler(queue, repository, taskResolver)
+    RescheduleExecutionHandler(queue, repository)
   }
 
   fun resetMocks() = reset(queue, repository)

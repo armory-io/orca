@@ -19,12 +19,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PRO
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.netflix.spinnaker.orca.Task
-import com.netflix.spinnaker.orca.TaskResolver
 import com.netflix.spinnaker.orca.pipeline.model.Execution.ExecutionType
 import com.netflix.spinnaker.orca.q.redis.migration.ExecutionTypeDeserializer
 import com.netflix.spinnaker.orca.q.redis.migration.OrcaToKeikoSerializationMigrator
-import com.netflix.spinnaker.orca.q.redis.migration.TaskTypeDeserializer
 import com.netflix.spinnaker.orca.q.redis.pending.RedisPendingExecutionService
 import com.netflix.spinnaker.q.metrics.EventPublisher
 import com.netflix.spinnaker.q.migration.SerializationMigrator
@@ -44,16 +41,13 @@ import java.util.*
 @EnableConfigurationProperties(ObjectMapperSubtypeProperties::class)
 class RedisOrcaQueueConfiguration : RedisQueueConfiguration() {
 
-  @Autowired
-  fun redisQueueObjectMapper(mapper: ObjectMapper,
-                             objectMapperSubtypeProperties: ObjectMapperSubtypeProperties,
-                             taskResolver: TaskResolver) {
+  @Autowired fun redisQueueObjectMapper(mapper: ObjectMapper,
+                                             objectMapperSubtypeProperties: ObjectMapperSubtypeProperties) {
     mapper.apply {
       registerModule(KotlinModule())
       registerModule(
         SimpleModule()
           .addDeserializer(ExecutionType::class.java, ExecutionTypeDeserializer())
-          .addDeserializer(Class::class.java, TaskTypeDeserializer(taskResolver))
       )
       disable(FAIL_ON_UNKNOWN_PROPERTIES)
 

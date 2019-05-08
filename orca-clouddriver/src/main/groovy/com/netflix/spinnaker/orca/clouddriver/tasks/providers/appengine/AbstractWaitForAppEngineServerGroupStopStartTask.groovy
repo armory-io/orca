@@ -57,24 +57,24 @@ abstract class AbstractWaitForAppEngineServerGroupStopStartTask extends Abstract
       def serverGroup = cluster.serverGroups.find { it.name == serverGroupName }
       if (!serverGroup) {
         log.info("${serverGroupName}: not found.")
-        return TaskResult.ofStatus(ExecutionStatus.TERMINAL)
+        return new TaskResult(ExecutionStatus.TERMINAL)
       }
 
       def desiredServingStatus = start ? "SERVING" : "STOPPED"
       if (serverGroup.servingStatus == desiredServingStatus) {
-        return TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+        return new TaskResult(ExecutionStatus.SUCCEEDED)
       } else {
         log.info("${serverGroupName}: not yet ${start ? "started" : "stopped"}.")
-        return TaskResult.ofStatus(ExecutionStatus.RUNNING)
+        return new TaskResult(ExecutionStatus.RUNNING)
       }
 
     } catch (RetrofitError e) {
       def retrofitErrorResponse = new RetrofitExceptionHandler().handle(stage.name, e)
       if (e.response?.status == 404) {
-        return TaskResult.ofStatus(ExecutionStatus.TERMINAL)
+        return new TaskResult(ExecutionStatus.TERMINAL)
       } else if (e.response?.status >= 500) {
         log.error("Unexpected retrofit error (${retrofitErrorResponse})")
-        return TaskResult.builder(ExecutionStatus.RUNNING).context([lastRetrofitException: retrofitErrorResponse]).build()
+        return new TaskResult(ExecutionStatus.RUNNING, [lastRetrofitException: retrofitErrorResponse])
       }
 
       throw e

@@ -17,7 +17,10 @@
 package com.netflix.spinnaker.orca.pipeline.expressions.whitelisting;
 
 import com.netflix.spinnaker.orca.ExecutionStatus;
-import com.netflix.spinnaker.orca.pipeline.model.*;
+import com.netflix.spinnaker.orca.pipeline.model.Execution;
+import com.netflix.spinnaker.orca.pipeline.model.JenkinsTrigger;
+import com.netflix.spinnaker.orca.pipeline.model.Stage;
+import com.netflix.spinnaker.orca.pipeline.model.Trigger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,11 +60,9 @@ public interface ReturnTypeRestrictor extends InstantiationTypeRestrictor {
         Execution.class,
         Stage.class,
         Trigger.class,
-        BuildInfo.class,
-        JenkinsArtifact.class,
-        JenkinsBuildInfo.class,
-        ConcourseBuildInfo.class,
-        SourceControl.class,
+        JenkinsTrigger.BuildInfo.class,
+        JenkinsTrigger.JenkinsArtifact.class,
+        JenkinsTrigger.SourceControl.class,
         ExecutionStatus.class,
         Execution.AuthenticationDetails.class,
         Execution.PausedDetails.class

@@ -65,7 +65,7 @@ class UpsertProjectStage implements StageDefinitionBuilder {
         "notification.type": "upsertproject"
       ]
 
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build()
+      return new TaskResult(ExecutionStatus.SUCCEEDED, outputs)
     }
   }
 }

@@ -125,7 +125,7 @@ class CreateBakeTask implements RetryableTask {
         }
       }
 
-      TaskResult.builder(ExecutionStatus.SUCCEEDED).context(stageOutputs).build()
+      new TaskResult(ExecutionStatus.SUCCEEDED, stageOutputs)
     } catch (RetrofitError e) {
       if (e.response?.status && e.response.status == 404) {
         try {
@@ -138,7 +138,7 @@ class CreateBakeTask implements RetryableTask {
           // do nothing
         }
 
-        return TaskResult.ofStatus(ExecutionStatus.RUNNING)
+        return new TaskResult(ExecutionStatus.RUNNING)
       }
       throw e
     }

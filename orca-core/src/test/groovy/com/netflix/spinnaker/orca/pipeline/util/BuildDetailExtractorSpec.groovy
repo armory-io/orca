@@ -15,12 +15,16 @@
  */
 package com.netflix.spinnaker.orca.pipeline.util
 
-
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class BuildDetailExtractorSpec extends Specification {
+
+  @Autowired
+  ObjectMapper mapper
 
   @Shared
   BuildDetailExtractor buildDetailExtractor = new BuildDetailExtractor()
@@ -29,7 +33,7 @@ class BuildDetailExtractorSpec extends Specification {
   def "Default detail from buildInfo"() {
 
     when:
-    buildDetailExtractor.tryToExtractJenkinsBuildDetails(buildInfo, result)
+    buildDetailExtractor.tryToExtractBuildDetails(buildInfo, result)
 
     then:
     result == expectedResult
@@ -44,7 +48,7 @@ class BuildDetailExtractorSpec extends Specification {
   def "Legacy Jenkins detail from the url"() {
 
     when:
-    buildDetailExtractor.tryToExtractJenkinsBuildDetails(buildInfo, result)
+    buildDetailExtractor.tryToExtractBuildDetails(buildInfo, result)
 
     then:
     result == expectedResult
@@ -60,7 +64,7 @@ class BuildDetailExtractorSpec extends Specification {
   def "Extract detail, missing fields and edge cases"() {
 
     when:
-    buildDetailExtractor.tryToExtractJenkinsBuildDetails(buildInfo, result)
+    buildDetailExtractor.tryToExtractBuildDetails(buildInfo, result)
 
     then:
     result == expectedResult

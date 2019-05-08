@@ -58,10 +58,10 @@ class DisableInstancesTask implements CloudProviderAware, Task {
     def taskId = katoService.requestOperations(actions)
       .toBlocking()
       .first()
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
       "notification.type"           : 'disableinstances',
       "kato.last.task.id"           : taskId,
       interestingHealthProviderNames: HealthHelper.getInterestingHealthProviderNames(stage, ["Discovery", "LoadBalancer"])
-    ]).build()
+    ])
   }
 }

@@ -16,7 +16,6 @@
 
 package com.netflix.spinnaker.config
 
-import com.netflix.spinnaker.orca.StageResolver
 import com.netflix.spinnaker.orca.dryrun.DryRunStageDefinitionBuilderFactory
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilderFactory
@@ -34,10 +33,10 @@ import org.springframework.context.annotation.Configuration
 class DryRunConfiguration {
   @Bean
   fun dryRunStageDefinitionBuilderFactory(
-    stageResolver: StageResolver
+    stageDefinitionBuilders: Collection<StageDefinitionBuilder>
   ): StageDefinitionBuilderFactory {
     log.info("Dry run trigger support enabled")
-    return DryRunStageDefinitionBuilderFactory(stageResolver)
+    return DryRunStageDefinitionBuilderFactory(stageDefinitionBuilders)
   }
 
   private val log = LoggerFactory.getLogger(javaClass)

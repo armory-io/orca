@@ -24,7 +24,6 @@ import java.util.List;
 public enum Strategy implements StrategyFlowComposer{
   RED_BLACK("redblack"),
   ROLLING_RED_BLACK("rollingredblack"),
-  CF_ROLLING_RED_BLACK("cfrollingredblack"),
   HIGHLANDER("highlander"),
   ROLLING_PUSH("rollingpush"),
   CUSTOM("custom"),

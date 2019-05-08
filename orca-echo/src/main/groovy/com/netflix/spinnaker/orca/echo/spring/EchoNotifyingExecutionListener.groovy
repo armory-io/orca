@@ -57,16 +57,14 @@ class EchoNotifyingExecutionListener implements ExecutionListener {
         if (execution.type == PIPELINE) {
           addApplicationNotifications(execution)
         }
-        AuthenticatedRequest.allowAnonymous({
-          echoService.recordEvent(
-            details: [
-              source     : "orca",
-              type       : "orca:${execution.type}:starting".toString(),
-              application: execution.application,
-            ],
-            content: buildContent(execution)
-          )
-        })
+        echoService.recordEvent(
+          details: [
+            source     : "orca",
+            type       : "orca:${execution.type}:starting".toString(),
+            application: execution.application,
+          ],
+          content: buildContent(execution)
+        )
       }
     } catch (Exception e) {
       log.error("Failed to send pipeline start event: ${execution?.id}", e)
@@ -83,16 +81,14 @@ class EchoNotifyingExecutionListener implements ExecutionListener {
         if (execution.type == PIPELINE) {
           addApplicationNotifications(execution)
         }
-        AuthenticatedRequest.allowAnonymous({
-          echoService.recordEvent(
-            details: [
-              source     : "orca",
-              type       : "orca:${execution.type}:${wasSuccessful ? "complete" : "failed"}".toString(),
-              application: execution.application,
-            ],
-            content: buildContent(execution)
-          )
-        })
+        echoService.recordEvent(
+          details: [
+            source     : "orca",
+            type       : "orca:${execution.type}:${wasSuccessful ? "complete" : "failed"}".toString(),
+            application: execution.application,
+          ],
+          content: buildContent(execution)
+        )
       }
     } catch (Exception e) {
       log.error("Failed to send pipeline end event: ${execution?.id}", e)

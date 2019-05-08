@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.orca.pipelinetemplate.v1schema.handler.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.netflix.spinnaker.orca.pipeline.util.ArtifactResolver
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor
 import com.netflix.spinnaker.orca.pipelinetemplate.handler.Handler
 import com.netflix.spinnaker.orca.pipelinetemplate.handler.HandlerChain
@@ -35,8 +34,7 @@ class V2SchemaHandlerGroup
 @Autowired constructor(
   private val templateLoader: V2TemplateLoader,
   private val objectMapper: ObjectMapper,
-  private val contextParameterProcessor: ContextParameterProcessor,
-  private val artifactResolver: ArtifactResolver
+  private val contextParameterProcessor: ContextParameterProcessor
 ): HandlerGroup {
 
   override fun getHandlers(): List<Handler>
@@ -45,7 +43,7 @@ class V2SchemaHandlerGroup
     V2ConfigurationValidationHandler(),
     V2TemplateValidationHandler(),
     V2GraphMutatorHandler(),
-    V2PipelineGenerator(artifactResolver)
+    V2PipelineGenerator()
   )
 }
 
@@ -57,19 +55,10 @@ class V2GraphMutatorHandler : Handler {
   }
 }
 
-class V2PipelineGenerator (
-  private val artifactResolver: ArtifactResolver
-) : Handler {
+class V2PipelineGenerator : Handler {
   override fun handle(chain: HandlerChain, context: PipelineTemplateContext) {
     val ctx = context.getSchemaContext<V2PipelineTemplateContext>()
     val generator = V2SchemaExecutionGenerator()
-
-    // Explicitly resolve artifacts after preprocessing to support artifacts in templated pipelines.
-    // TODO(jacobkiefer): Refactor /orchestrate so we don't have to special case v2 artifact resolution.
-    val generatedPipeline = generator.generate(ctx.template, ctx.configuration, context.getRequest())
-    if (!context.getRequest().plan) {
-      artifactResolver.resolveArtifacts(generatedPipeline)
-    }
-    context.getProcessedOutput().putAll(generatedPipeline)
+    context.getProcessedOutput().putAll(generator.generate(ctx.template, ctx.configuration, context.getRequest()))
   }
 }

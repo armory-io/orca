@@ -16,23 +16,19 @@
 
 package com.netflix.spinnaker.orca.pipeline.expressions
 
-import com.netflix.spinnaker.orca.config.UserConfiguredUrlRestrictions
-import com.netflix.spinnaker.orca.pipeline.util.ContextFunctionConfiguration
-import org.springframework.expression.EvaluationContext
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import static com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED
 import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.pipeline
-import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.stage
+import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.stage;
 
 class ExpressionsSupportSpec extends Specification {
   @Shared
   def pipeline = pipeline {
     stage {
       id = "1"
-      refId = "1"
       name = "My First Stage"
       context = [
         "region": "us-east-1",
@@ -41,7 +37,6 @@ class ExpressionsSupportSpec extends Specification {
 
     stage {
       id = "2"
-      refId = "2"
       name = "My Second Stage"
       context = [
         "region": "us-west-1",
@@ -50,7 +45,6 @@ class ExpressionsSupportSpec extends Specification {
 
     stage {
       id = "3"
-      refId = "3"
       status = SUCCEEDED
       type = "createServerGroup"
       name = "Deploy in us-east-1"
@@ -79,7 +73,6 @@ class ExpressionsSupportSpec extends Specification {
 
     stage {
       id = "4"
-      refId = "4"
       status = SUCCEEDED
       type = "disableServerGroup"
       name = "disable server group"
@@ -151,40 +144,11 @@ class ExpressionsSupportSpec extends Specification {
     "42"                 | false
   }
 
-  def "support registering custom expression functions"() {
-    given:
-    ContextFunctionConfiguration configuration = new ContextFunctionConfiguration(
-      new UserConfiguredUrlRestrictions.Builder().build(),
-      [new HelloExpressionFunctionProvider()]
-    )
-
-    ExpressionsSupport.helperFunctionConfigurationAtomicReference.set(configuration)
-
+  def "deployedServerGroup should resolve for valid stage type"() {
     when:
-    EvaluationContext context = ExpressionsSupport.newEvaluationContext(pipeline, true)
+    def map = ExpressionsSupport.deployedServerGroups(pipeline)
 
-    then:
-    context.variables.containsKey("test_hello")
-  }
-}
-
-class HelloExpressionFunctionProvider implements ExpressionFunctionProvider {
-
-  @Override
-  String getNamespace() {
-    return "test"
-  }
-
-  @Override
-  Collection<FunctionDefinition> getFunctions() {
-    return [
-      new FunctionDefinition("hello", [
-        new FunctionParameter(String.class, "name", "Person's name to say hello to")
-      ])
-    ]
-  }
-
-  static String hello(String name) {
-    return "Hello, $name"
+    then: "(deploy|createServerGroup|cloneServerGroup|rollingPush)"
+    map.serverGroup == ["app-test-v001"]
   }
 }

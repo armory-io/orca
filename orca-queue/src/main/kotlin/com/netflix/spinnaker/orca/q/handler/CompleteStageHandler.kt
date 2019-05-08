@@ -17,11 +17,10 @@
 package com.netflix.spinnaker.orca.q.handler
 
 import com.netflix.spectator.api.Registry
-import com.netflix.spectator.api.histogram.PercentileTimer
+import com.netflix.spectator.api.histogram.BucketCounter
 import com.netflix.spinnaker.orca.ExecutionStatus
 import com.netflix.spinnaker.orca.ExecutionStatus.*
 import com.netflix.spinnaker.orca.events.StageComplete
-import com.netflix.spinnaker.orca.exceptions.ExceptionHandler
 import com.netflix.spinnaker.orca.ext.*
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilderFactory
 import com.netflix.spinnaker.orca.pipeline.graph.StageGraphBuilder
@@ -29,7 +28,6 @@ import com.netflix.spinnaker.orca.pipeline.model.Stage
 import com.netflix.spinnaker.orca.pipeline.model.Task
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor
-import com.netflix.spinnaker.orca.pipeline.util.StageNavigator
 import com.netflix.spinnaker.orca.q.*
 import com.netflix.spinnaker.q.Queue
 import org.springframework.beans.factory.annotation.Qualifier
@@ -42,14 +40,12 @@ import java.util.concurrent.TimeUnit
 class CompleteStageHandler(
   override val queue: Queue,
   override val repository: ExecutionRepository,
-  override val stageNavigator: StageNavigator,
   @Qualifier("queueEventPublisher") private val publisher: ApplicationEventPublisher,
   private val clock: Clock,
-  private val exceptionHandlers: List<ExceptionHandler>,
   override val contextParameterProcessor: ContextParameterProcessor,
   private val registry: Registry,
   override val stageDefinitionBuilderFactory: StageDefinitionBuilderFactory
-) : OrcaMessageHandler<CompleteStage>, StageBuilderAware, ExpressionAware, AuthenticationAware {
+) : OrcaMessageHandler<CompleteStage>, StageBuilderAware, ExpressionAware {
 
   override fun handle(message: CompleteStage) {
     message.withStage { stage ->
@@ -66,9 +62,7 @@ class CompleteStageHandler(
             // check to see if this stage has any unplanned synthetic after stages
             var afterStages = stage.firstAfterStages()
             if (afterStages.isEmpty()) {
-              stage.withAuth {
-                stage.planAfterStages()
-              }
+              stage.planAfterStages()
               afterStages = stage.firstAfterStages()
             }
             if (afterStages.isNotEmpty() && afterStages.any { it.status == NOT_STARTED }) {
@@ -82,13 +76,7 @@ class CompleteStageHandler(
               status = SKIPPED
             }
           } else if (status.isFailure) {
-            var hasOnFailureStages = false
-
-            stage.withAuth {
-              hasOnFailureStages = stage.planOnFailureStages()
-            }
-
-            if (hasOnFailureStages) {
+            if (stage.planOnFailureStages()) {
               stage.firstAfterStages().forEach {
                 queue.push(StartStage(it))
               }
@@ -99,10 +87,7 @@ class CompleteStageHandler(
           stage.status = status
           stage.endTime = clock.millis()
         } catch (e: Exception) {
-          log.error("Failed to construct after stages for ${stage.name} ${stage.id}", e)
-
-          val exceptionDetails = exceptionHandlers.shouldRetry(e, stage.name + ":ConstructAfterStages")
-          stage.context["exception"] = exceptionDetails
+          log.error("Failed to construct after stages for $stage.id", e)
           stage.status = TERMINAL
           stage.endTime = clock.millis()
         }
@@ -149,10 +134,19 @@ class CompleteStageHandler(
         } ?: id
       }
 
-    PercentileTimer
-      .get(registry, id)
-      .record((stage.endTime ?: clock.millis()) - (stage.startTime ?: 0), TimeUnit.MILLISECONDS)
+    BucketCounter
+      .get(registry, id, { v -> bucketDuration(v) })
+      .record((stage.endTime ?: clock.millis()) - (stage.startTime ?: 0))
   }
+
+  private fun bucketDuration(duration: Long) =
+    when {
+      duration > TimeUnit.MINUTES.toMillis(60) -> "gt60m"
+      duration > TimeUnit.MINUTES.toMillis(30) -> "gt30m"
+      duration > TimeUnit.MINUTES.toMillis(15) -> "gt15m"
+      duration > TimeUnit.MINUTES.toMillis(5)  -> "gt5m"
+      else                                     -> "lt5m"
+    }
 
   override val messageType = CompleteStage::class.java
 
@@ -227,7 +221,7 @@ class CompleteStageHandler(
     val afterStageStatuses = afterStages().map(Stage::getStatus)
     return when {
       allStatuses.isEmpty()                    -> NOT_STARTED
-      allStatuses.contains(TERMINAL)           -> failureStatus() // handle configured 'if stage fails' options correctly
+      allStatuses.contains(TERMINAL)           -> TERMINAL
       allStatuses.contains(STOPPED)            -> STOPPED
       allStatuses.contains(CANCELED)           -> CANCELED
       allStatuses.contains(FAILED_CONTINUE)    -> FAILED_CONTINUE

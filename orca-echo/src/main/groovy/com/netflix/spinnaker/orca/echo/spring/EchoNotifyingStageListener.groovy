@@ -24,7 +24,6 @@ import com.netflix.spinnaker.orca.pipeline.model.Stage
 import com.netflix.spinnaker.orca.pipeline.model.Task
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor
-import com.netflix.spinnaker.security.AuthenticatedRequest
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -32,6 +31,8 @@ import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import static com.netflix.spinnaker.orca.ExecutionStatus.*
 import static com.netflix.spinnaker.orca.pipeline.model.Execution.ExecutionType.ORCHESTRATION
+import static com.netflix.spinnaker.security.AuthenticatedRequest.SPINNAKER_EXECUTION_ID
+import static com.netflix.spinnaker.security.AuthenticatedRequest.SPINNAKER_USER
 
 /**
  * Converts execution events to Echo events.
@@ -126,14 +127,12 @@ class EchoNotifyingStageListener implements StageListener {
       }
 
       try {
-        MDC.put(AuthenticatedRequest.Header.EXECUTION_ID.header, stage.execution.id)
-        MDC.put(AuthenticatedRequest.Header.USER.header, stage.execution?.authentication?.user ?: "anonymous")
-        AuthenticatedRequest.allowAnonymous({
-          echoService.recordEvent(event)
-        })
+        MDC.put(SPINNAKER_EXECUTION_ID, stage.execution.id);
+        MDC.put(SPINNAKER_USER, stage.execution?.authentication?.user ?: "anonymous")
+        echoService.recordEvent(event)
       } finally {
-        MDC.remove(AuthenticatedRequest.Header.EXECUTION_ID.header)
-        MDC.remove(AuthenticatedRequest.Header.USER.header)
+        MDC.remove(SPINNAKER_EXECUTION_ID)
+        MDC.remove(SPINNAKER_USER)
       }
     } catch (Exception e) {
       log.error("Failed to send ${type} event ${phase} ${stage.execution.id} ${maybeTask.map { Task task -> task.name }}", e)

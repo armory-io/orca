@@ -57,7 +57,7 @@ public class DynamicResolveManifestTask extends AbstractCloudProviderAwareTask i
     StageData stageData = fromStage(stage);
 
     if (StringUtils.isEmpty(stageData.criteria)) {
-      return TaskResult.SUCCEEDED;
+      return new TaskResult(ExecutionStatus.SUCCEEDED);
     }
 
     Manifest target = retrySupport.retry(() -> oortService.getDynamicManifest(credentials,
@@ -76,7 +76,7 @@ public class DynamicResolveManifestTask extends AbstractCloudProviderAwareTask i
         .put("manifestName", target.getName())
         .build();
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).outputs(outputs).build();
+    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs, outputs);
   }
 
   private StageData fromStage(Stage stage) {

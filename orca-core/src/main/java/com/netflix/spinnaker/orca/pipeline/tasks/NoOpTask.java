@@ -26,6 +26,6 @@ import static com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED;
 public class NoOpTask implements Task {
   @Override
   public TaskResult execute(Stage ignored) {
-    return TaskResult.SUCCEEDED;
+    return new TaskResult(SUCCEEDED);
   }
 }

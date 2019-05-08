@@ -19,8 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spectator.api.*
 import com.netflix.spinnaker.orca.clouddriver.OortService
 import com.netflix.spinnaker.orca.front50.Front50Service
-import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository
-import com.netflix.spinnaker.orca.pipeline.util.ArtifactResolver
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor
 import com.netflix.spinnaker.orca.pipelinetemplate.handler.PipelineTemplateErrorHandler
 import com.netflix.spinnaker.orca.pipelinetemplate.handler.SchemaVersionHandler
@@ -49,9 +47,6 @@ class PipelineTemplatePipelinePreprocessorSpec extends Specification {
   V2TemplateLoader v2TemplateLoader = new V2TemplateLoader(oortService, objectMapper)
   ContextParameterProcessor contextParameterProcessor = new ContextParameterProcessor()
 
-  ExecutionRepository executionRepository = Mock(ExecutionRepository)
-  ArtifactResolver artifactResolver = Spy(ArtifactResolver, constructorArgs: [objectMapper, executionRepository, new ContextParameterProcessor()])
-
   Renderer renderer = new JinjaRenderer(
     new YamlRenderedValueConverter(), objectMapper, Mock(Front50Service), []
   )
@@ -70,7 +65,7 @@ class PipelineTemplatePipelinePreprocessorSpec extends Specification {
     objectMapper,
     new SchemaVersionHandler(
       new V1SchemaHandlerGroup( templateLoader, renderer, objectMapper, registry),
-      new V2SchemaHandlerGroup(v2TemplateLoader, objectMapper, contextParameterProcessor, artifactResolver)),
+      new V2SchemaHandlerGroup(v2TemplateLoader, objectMapper, contextParameterProcessor)),
     new PipelineTemplateErrorHandler(),
     registry
   )

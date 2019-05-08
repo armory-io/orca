@@ -17,7 +17,7 @@
 package com.netflix.spinnaker.orca.q.handler
 
 import com.netflix.spinnaker.orca.ExecutionStatus
-import com.netflix.spinnaker.orca.TaskResolver
+import com.netflix.spinnaker.orca.Task
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository
 import com.netflix.spinnaker.orca.q.RescheduleExecution
 import com.netflix.spinnaker.orca.q.RunTask
@@ -27,8 +27,7 @@ import org.springframework.stereotype.Component
 @Component
 class RescheduleExecutionHandler(
   override val queue: Queue,
-  override val repository: ExecutionRepository,
-  private val taskResolver: TaskResolver
+  override val repository: ExecutionRepository
 ) : OrcaMessageHandler<RescheduleExecution> {
 
   override val messageType = RescheduleExecution::class.java
@@ -46,7 +45,7 @@ class RescheduleExecutionHandler(
               queue.reschedule(RunTask(message,
                 stage.id,
                 it.id,
-                taskResolver.getTaskClass(it.implementingClass)
+                Class.forName(it.implementingClass) as Class<out Task>
               ))
             }
         }

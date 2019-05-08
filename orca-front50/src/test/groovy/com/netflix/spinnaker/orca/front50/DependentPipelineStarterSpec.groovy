@@ -33,7 +33,6 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.support.StaticApplicationContext
 import spock.lang.Specification
 import spock.lang.Subject
-
 import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.pipeline
 import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.stage
 
@@ -44,7 +43,7 @@ class DependentPipelineStarterSpec extends Specification {
 
   ObjectMapper mapper = OrcaObjectMapper.newInstance()
   ExecutionRepository executionRepository = Mock(ExecutionRepository)
-  ArtifactResolver artifactResolver = Spy(ArtifactResolver, constructorArgs: [mapper, executionRepository, new ContextParameterProcessor()])
+  ArtifactResolver artifactResolver = Spy(ArtifactResolver, constructorArgs: [mapper, executionRepository])
 
   def "should only propagate credentials when explicitly provided"() {
     setup:
@@ -74,7 +73,7 @@ class DependentPipelineStarterSpec extends Specification {
       applicationContext,
       mapper,
       new ContextParameterProcessor(),
-      Optional.empty(),
+      Optional.of([]),
       Optional.of(artifactResolver),
       new NoopRegistry()
     )
@@ -127,7 +126,7 @@ class DependentPipelineStarterSpec extends Specification {
       applicationContext,
       mapper,
       new ContextParameterProcessor(),
-      Optional.empty(),
+      Optional.of([]),
       Optional.of(artifactResolver),
       new NoopRegistry()
     )
@@ -185,7 +184,7 @@ class DependentPipelineStarterSpec extends Specification {
       applicationContext,
       mapper,
       new ContextParameterProcessor(),
-      Optional.empty(),
+      Optional.of([]),
       Optional.of(artifactResolver),
       new NoopRegistry()
     )
@@ -257,7 +256,7 @@ class DependentPipelineStarterSpec extends Specification {
       applicationContext,
       mapper,
       new ContextParameterProcessor(),
-      Optional.empty(),
+      Optional.of([]),
       Optional.of(artifactResolver),
       new NoopRegistry()
     )
@@ -323,7 +322,7 @@ class DependentPipelineStarterSpec extends Specification {
       applicationContext,
       mapper,
       new ContextParameterProcessor(),
-      Optional.empty(),
+      Optional.of([]),
       Optional.of(artifactResolver),
       new NoopRegistry()
     )
@@ -374,7 +373,7 @@ class DependentPipelineStarterSpec extends Specification {
       applicationContext,
       mapper,
       new ContextParameterProcessor(),
-      Optional.empty(),
+      Optional.of([]),
       Optional.of(artifactResolver),
       new NoopRegistry()
     )
@@ -424,7 +423,7 @@ class DependentPipelineStarterSpec extends Specification {
       applicationContext,
       mapper,
       new ContextParameterProcessor(),
-      Optional.empty(),
+      Optional.of([]),
       Optional.of(artifactResolver),
       new NoopRegistry()
     )

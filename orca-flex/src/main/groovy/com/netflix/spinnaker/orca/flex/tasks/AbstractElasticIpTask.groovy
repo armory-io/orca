@@ -44,7 +44,7 @@ abstract class AbstractElasticIpTask implements Task {
       "elastic.ip.assignment": performRequest(stage.mapTo(StageData))
     ]
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build()
+    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs)
   }
 
   static class StageData {

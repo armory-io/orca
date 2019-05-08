@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
-import com.netflix.spinnaker.orca.extensionpoint.pipeline.ExecutionPreprocessor;
+import com.netflix.spinnaker.orca.extensionpoint.pipeline.PipelinePreprocessor;
 import com.netflix.spinnaker.orca.front50.Front50Service;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
 import com.netflix.spinnaker.orca.pipelinetemplate.v1schema.model.PipelineTemplate;
@@ -44,7 +44,7 @@ public class PlanTemplateDependentsTask implements RetryableTask {
   private ObjectMapper pipelineTemplateObjectMapper;
 
   @Autowired
-  private ExecutionPreprocessor pipelineTemplatePreprocessor;
+  private PipelinePreprocessor pipelineTemplatePreprocessor;
 
   @Nonnull
   @Override
@@ -93,7 +93,11 @@ public class PlanTemplateDependentsTask implements RetryableTask {
       context.put("pipelineTemplate.dependentErrors", errorResponses);
     }
 
-    return TaskResult.builder(errorResponses.isEmpty() ? ExecutionStatus.SUCCEEDED : ExecutionStatus.TERMINAL).context(context).outputs(Collections.emptyMap()).build();
+    return new TaskResult(
+      errorResponses.isEmpty() ? ExecutionStatus.SUCCEEDED : ExecutionStatus.TERMINAL,
+      context,
+      Collections.emptyMap()
+    );
   }
 
   @Override

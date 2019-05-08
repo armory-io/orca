@@ -59,6 +59,9 @@ public class CreateJiraIssueTask implements RetryableTask {
       .ifPresent(createIssueRequest::setReporter);
 
     CreateJiraIssueResponse createJiraIssueResponse = jiraService.createJiraIssue(createIssueRequest);
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(ImmutableMap.of("createJiraIssueResponse", createJiraIssueResponse)).build();
+    return new TaskResult(
+      ExecutionStatus.SUCCEEDED,
+      ImmutableMap.of("createJiraIssueResponse", createJiraIssueResponse)
+    );
   }
 }

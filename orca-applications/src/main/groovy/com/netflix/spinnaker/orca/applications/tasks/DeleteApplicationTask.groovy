@@ -40,20 +40,20 @@ class DeleteApplicationTask extends AbstractFront50Task {
           front50Service.deletePermission(application.name)
         } catch (RetrofitError re) {
           if (re.response?.status == 404) {
-            return TaskResult.SUCCEEDED
+            return new TaskResult(ExecutionStatus.SUCCEEDED, [:], [:])
           }
           log.error("Could not create or update application permission", re)
-          return TaskResult.builder(ExecutionStatus.TERMINAL).outputs(outputs).build()
+          return new TaskResult(ExecutionStatus.TERMINAL, [:], outputs)
         }
       }
     } catch (RetrofitError e) {
       if (e.response?.status == 404) {
-        return TaskResult.SUCCEEDED
+        return new TaskResult(ExecutionStatus.SUCCEEDED, [:], [:])
       }
       log.error("Could not create or update application permission", e)
-      return TaskResult.builder(ExecutionStatus.TERMINAL).outputs(outputs).build()
+      return new TaskResult(ExecutionStatus.TERMINAL, [:], outputs)
     }
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).outputs(outputs).build()
+    return new TaskResult(ExecutionStatus.SUCCEEDED, [:], outputs)
   }
 
   @Override

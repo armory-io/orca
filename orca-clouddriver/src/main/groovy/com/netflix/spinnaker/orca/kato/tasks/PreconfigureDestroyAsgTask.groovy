@@ -29,13 +29,13 @@ class PreconfigureDestroyAsgTask implements Task {
 
   @Override
   TaskResult execute(Stage stage) {
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
         "resizeAsg.credentials"     : stage.context.credentials,
         "resizeAsg.regions"         : stage.context.regions,
         "resizeAsg.asgName"         : stage.context.asgName,
         "resizeAsg.capacity.min"    : 0,
         "resizeAsg.capacity.max"    : 0,
         "resizeAsg.capacity.desired": 0
-    ]).build()
+    ])
   }
 }

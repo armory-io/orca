@@ -63,6 +63,6 @@ class CreateServerGroupTask extends AbstractCloudProviderAwareTask implements Re
       outputs.interestingHealthProviderNames = HealthHelper.getInterestingHealthProviderNames(stage, ["Amazon"])
     }
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build()
+    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs)
   }
 }

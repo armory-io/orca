@@ -55,27 +55,27 @@ class WaitForDestroyedServerGroupTask extends AbstractCloudProviderAwareTask imp
       def response = oortService.getCluster(appName, account, clusterName, cloudProvider)
 
       if (response.status != 200) {
-        return TaskResult.ofStatus(ExecutionStatus.RUNNING)
+        return new TaskResult(ExecutionStatus.RUNNING)
       }
 
       Map cluster = objectMapper.readValue(response.body.in().text, Map)
       if (!cluster || !cluster.serverGroups) {
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([remainingInstances: []]).build()
+        return new TaskResult(ExecutionStatus.SUCCEEDED, [remainingInstances: []])
       }
       def serverGroup = cluster.serverGroups.find { it.name == serverGroupName && it.region == serverGroupRegion }
       if (!serverGroup) {
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([remainingInstances: []]).build()
+        return new TaskResult(ExecutionStatus.SUCCEEDED, [remainingInstances: []])
       }
       def instances = serverGroup.instances ?: []
       log.info("${serverGroupName}: not yet destroyed, found instances: ${instances?.join(', ') ?: 'none'}")
-      return TaskResult.builder(ExecutionStatus.RUNNING).context([remainingInstances: instances.findResults { it.name }]).build()
+      return new TaskResult(ExecutionStatus.RUNNING, [remainingInstances: instances.findResults { it.name }])
     } catch (RetrofitError e) {
       def retrofitErrorResponse = new RetrofitExceptionHandler().handle(stage.name, e)
       if (e.response?.status == 404) {
-        return TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+        return new TaskResult(ExecutionStatus.SUCCEEDED)
       } else if (e.response?.status >= 500) {
         log.error("Unexpected retrofit error (${retrofitErrorResponse})")
-        return TaskResult.builder(ExecutionStatus.RUNNING).context([lastRetrofitException: retrofitErrorResponse]).build()
+        return new TaskResult(ExecutionStatus.RUNNING, [lastRetrofitException: retrofitErrorResponse])
       }
 
       throw e

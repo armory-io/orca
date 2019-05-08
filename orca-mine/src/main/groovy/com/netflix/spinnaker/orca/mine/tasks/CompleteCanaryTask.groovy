@@ -28,13 +28,15 @@ class CompleteCanaryTask implements Task {
   TaskResult execute(Stage stage) {
     Map canary = stage.context.canary
     if (canary.status?.status == 'CANCELED') {
-      return TaskResult.ofStatus(ExecutionStatus.CANCELED)
+      return new TaskResult(ExecutionStatus.CANCELED)
     } else if (canary.canaryResult?.overallResult == 'SUCCESS') {
-      return TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+      return new TaskResult(ExecutionStatus.SUCCEEDED)
     } else if (canary?.health?.health in ["UNHEALTHY", "UNKNOWN"] || canary.canaryResult?.overallResult == 'FAILURE') {
-      return TaskResult.ofStatus(stage.context.continueOnUnhealthy == true
+      return new TaskResult(
+        stage.context.continueOnUnhealthy == true
           ? ExecutionStatus.FAILED_CONTINUE
-          : ExecutionStatus.TERMINAL)
+          : ExecutionStatus.TERMINAL
+      )
     } else {
       throw new IllegalStateException("Canary in unhandled state")
     }

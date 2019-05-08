@@ -47,7 +47,7 @@ class CaptureInstanceUptimeTask extends AbstractCloudProviderAwareTask implement
   @Override
   TaskResult execute(Stage stage) {
     if (!instanceUptimeCommand) {
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([instanceUptimes: [:]]).build()
+      return new TaskResult(ExecutionStatus.SUCCEEDED, [instanceUptimes: [:]])
     }
 
     def cloudProvider = getCloudProvider(stage)
@@ -65,9 +65,9 @@ class CaptureInstanceUptimeTask extends AbstractCloudProviderAwareTask implement
       return accumulator
     }
 
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
       "instanceUptimes": instanceUptimes
-    ]).build()
+    ])
   }
 
   protected Map getInstance(String account, String region, String instanceId) {

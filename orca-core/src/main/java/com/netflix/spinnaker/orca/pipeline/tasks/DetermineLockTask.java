@@ -70,7 +70,7 @@ public class DetermineLockTask implements Task {
         lockContext = stage.mapTo("/lock", LockContext.LockContextBuilder.class).build();
       }
 
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(Collections.singletonMap("lock", lockContext)).build();
+      return new TaskResult(ExecutionStatus.SUCCEEDED, Collections.singletonMap("lock", lockContext));
     } catch (Exception ex) {
       final boolean lockingEnabled = lockingConfigurationProperties.isEnabled();
       final boolean learningMode = lockingConfigurationProperties.isLearningMode();
@@ -80,7 +80,7 @@ public class DetermineLockTask implements Task {
           StructuredArguments.kv("locking.learningMode", learningMode),
           ex);
         LockContext lc = new LockContext.LockContextBuilder("unknown", null, "unknown").withStage(stage).build();
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(Collections.singletonMap("lock", lc)).build();
+        return new TaskResult(ExecutionStatus.SUCCEEDED, Collections.singletonMap("lock", lc));
       }
       throw new IllegalStateException("Unable to determine lock from context or previous lock stage", ex);
     }

@@ -38,9 +38,6 @@ class StageData {
   boolean scaleDown
   Map<String, List<String>> availabilityZones
   int maxRemainingAsgs
-  Boolean allowDeleteActive
-  Boolean allowScaleDownActive
-  int maxInitialAsgs = 1
   Boolean useSourceCapacity
   Boolean preferSourceCapacity
   Source source
@@ -113,7 +110,6 @@ class StageData {
     String serverGroupName
     Boolean useSourceCapacity
     Boolean preferSourceCapacity
-    String clusterName
   }
 
   static class PipelineBeforeCleanup {

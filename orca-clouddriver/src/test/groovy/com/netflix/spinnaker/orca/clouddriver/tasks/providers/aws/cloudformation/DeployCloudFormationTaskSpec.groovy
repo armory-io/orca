@@ -38,7 +38,8 @@ class DeployCloudFormationTaskSpec extends Specification {
   def artifactResolver = Mock(ArtifactResolver)
 
   @Subject
-  def deployCloudFormationTask = new DeployCloudFormationTask(katoService: katoService, oortService: oortService,  artifactResolver: artifactResolver)
+  def deployCloudFormationTask = new DeployCloudFormationTask(katoService: katoService, oortService: oortService,
+    objectMapper: objectMapper, artifactResolver: artifactResolver)
 
   def "should put kato task information as output"() {
     given:
@@ -103,29 +104,25 @@ class DeployCloudFormationTaskSpec extends Specification {
     def context = [
       credentials: 'creds',
       cloudProvider: 'aws',
-      source: source,
-      stackArtifactId: stackArtifactId,
-      stackArtifactAccount: stackArtifactAccount,
+      source: 'artifact',
+      stackArtifactId: 'id',
+      stackArtifactAccount: 'account',
       regions: ['eu-west-1'],
       templateBody: [key: 'value']]
     def stage = new Stage(pipeline, 'test', 'test', context)
+    def template = new TypedString('{ "key": "value" }')
 
     when:
     def result = deployCloudFormationTask.execute(stage)
 
     then:
     1 * artifactResolver.getBoundArtifactForId(stage, 'id') >> new Artifact()
-    1 * oortService.fetchArtifact(_) >> new Response("url", 200, "reason", Collections.emptyList(), new TypedString(template))
+    1 * oortService.fetchArtifact(_) >> new Response("url", 200, "reason", Collections.emptyList(), template)
     1 * katoService.requestOperations("aws", {
       it.get(0).get("deployCloudFormation").containsKey("templateBody")
     }) >> Observable.just(taskId)
     result.context.'kato.result.expected' == true
     result.context.'kato.last.task.id' == taskId
-
-    where:
-    source     | stackArtifactId  | stackArtifactAccount | template
-    'artifact' | 'id'             | 'account'            | '{"key": "value"}'
-    'artifact' | 'id'             | 'account'            | 'key: value'
   }
 
 }

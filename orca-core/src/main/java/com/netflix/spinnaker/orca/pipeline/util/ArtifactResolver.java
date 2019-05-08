@@ -37,7 +37,14 @@ import rx.schedulers.Schedulers;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,24 +60,21 @@ public class ArtifactResolver {
 
   private final ObjectMapper objectMapper;
   private final ExecutionRepository executionRepository;
-  private final ContextParameterProcessor contextParameterProcessor;
 
   @Autowired
-  public ArtifactResolver(ObjectMapper objectMapper, ExecutionRepository executionRepository,
-                          ContextParameterProcessor contextParameterProcessor) {
+  public ArtifactResolver(ObjectMapper objectMapper, ExecutionRepository executionRepository) {
     this.objectMapper = objectMapper;
     this.executionRepository = executionRepository;
-    this.contextParameterProcessor = contextParameterProcessor;
   }
 
   public @Nonnull
   List<Artifact> getArtifacts(@Nonnull Stage stage) {
     if (stage.getContext() instanceof StageContext) {
-      return Optional.ofNullable((List<?>) ((StageContext) stage.getContext()).getAll("artifacts"))
+      return (List<Artifact>) Optional.ofNullable((List) ((StageContext) stage.getContext()).getAll("artifacts"))
         .map(list -> list.stream()
           .filter(Objects::nonNull)
-          .flatMap(it -> ((List<?>) it).stream())
-          .map(a -> a instanceof Map ? objectMapper.convertValue(a, Artifact.class) : (Artifact) a)
+          .flatMap(it -> ((List) it).stream())
+          .map(a -> a instanceof Map ? objectMapper.convertValue(a, Artifact.class) : a)
           .collect(Collectors.toList()))
         .orElse(emptyList());
     } else {
@@ -87,9 +91,9 @@ public class ArtifactResolver {
     List<Artifact> emittedArtifacts = Stage.topologicalSort(execution.getStages())
       .filter(s -> s.getOutputs().containsKey("artifacts"))
       .flatMap(
-        s -> ((List<?>) s.getOutputs().get("artifacts"))
+        s -> (Stream<Artifact>) ((List) s.getOutputs().get("artifacts"))
             .stream()
-            .map(a -> a instanceof Map ? objectMapper.convertValue(a, Artifact.class) : (Artifact) a)
+            .map(a -> a instanceof Map ? objectMapper.convertValue(a, Artifact.class) : a)
       ).collect(Collectors.toList());
     Collections.reverse(emittedArtifacts);
 
@@ -102,26 +106,6 @@ public class ArtifactResolver {
     return emittedArtifacts;
   }
 
-  /**
-   * Used to fully resolve a bound artifact on a stage that can either select
-   * an expected artifact ID for an expected artifact defined in a prior stage
-   * or as a trigger constraint OR define an inline expression-evaluable default artifact.
-   * @param stage The stage containing context to evaluate expressions on the bound artifact.
-   * @param id An expected artifact id. Either id or artifact must be specified.
-   * @param artifact An inline default artifact. Either id or artifact must be specified.
-   * @return A bound artifact with expressions evaluated.
-   */
-  public @Nullable Artifact getBoundArtifactForStage(Stage stage, @Nullable String id, @Nullable Artifact artifact) {
-    Artifact boundArtifact = id != null ? getBoundArtifactForId(stage, id) : artifact;
-    Map<String, Object> boundArtifactMap = objectMapper.convertValue(boundArtifact, new TypeReference<Map<String, Object>>() {
-    });
-
-    Map<String, Object> evaluatedBoundArtifactMap = contextParameterProcessor.process(boundArtifactMap,
-      contextParameterProcessor.buildExecutionContext(stage, true), true);
-
-    return objectMapper.convertValue(evaluatedBoundArtifactMap, Artifact.class);
-  }
-
   public @Nullable
   Artifact getBoundArtifactForId(
     @Nonnull Stage stage, @Nullable String id) {
@@ -131,11 +115,11 @@ public class ArtifactResolver {
 
     List<ExpectedArtifact> expectedArtifacts;
     if (stage.getContext() instanceof StageContext) {
-      expectedArtifacts = Optional.ofNullable((List<?>) ((StageContext) stage.getContext()).getAll("resolvedExpectedArtifacts"))
+      expectedArtifacts = (List<ExpectedArtifact>) Optional.ofNullable((List) ((StageContext) stage.getContext()).getAll("resolvedExpectedArtifacts"))
         .map(list -> list.stream()
           .filter(Objects::nonNull)
-          .flatMap(it -> ((List<?>) it).stream())
-          .map(a -> a instanceof Map ? objectMapper.convertValue(a, ExpectedArtifact.class) : (ExpectedArtifact) a)
+          .flatMap(it -> ((List) it).stream())
+          .map(a -> a instanceof Map ? objectMapper.convertValue(a, ExpectedArtifact.class) : a)
           .collect(Collectors.toList()))
         .orElse(emptyList());
     } else {
@@ -143,20 +127,10 @@ public class ArtifactResolver {
       expectedArtifacts = new ArrayList<>();
     }
 
-    final Optional<ExpectedArtifact> expectedArtifactOptional = expectedArtifacts
+    return expectedArtifacts
       .stream()
       .filter(e -> e.getId().equals(id))
-      .findFirst();
-
-    expectedArtifactOptional.ifPresent(expectedArtifact -> {
-      final Artifact boundArtifact = expectedArtifact.getBoundArtifact();
-      final Artifact matchArtifact = expectedArtifact.getMatchArtifact();
-      if (boundArtifact != null && matchArtifact != null && boundArtifact.getArtifactAccount() == null) {
-        boundArtifact.setArtifactAccount(matchArtifact.getArtifactAccount());
-      }
-    });
-
-    return expectedArtifactOptional
+      .findFirst()
       .map(ExpectedArtifact::getBoundArtifact)
       .orElse(null);
   }
@@ -179,23 +153,18 @@ public class ArtifactResolver {
     return execution == null ? Collections.emptyList() : getAllArtifacts(execution);
   }
 
-  public void resolveArtifacts(@Nonnull Map<String, Object> pipeline) {
+  public void resolveArtifacts(@Nonnull Map pipeline) {
     Map<String, Object> trigger = (Map<String, Object>) pipeline.get("trigger");
-    List<ExpectedArtifact> expectedArtifacts = Optional.ofNullable((List<?>) pipeline.get("expectedArtifacts"))
+    List<ExpectedArtifact> expectedArtifacts = (List<ExpectedArtifact>) Optional.ofNullable((List) pipeline.get("expectedArtifacts"))
       .map(list -> list.stream().map(it -> objectMapper.convertValue(it, ExpectedArtifact.class)).collect(toList()))
       .orElse(emptyList());
-
-    List<Artifact> receivedArtifactsFromPipeline = Optional.ofNullable((List<?>) pipeline.get("receivedArtifacts"))
+    List<Artifact> receivedArtifactsFromPipeline = (List<Artifact>) Optional.ofNullable((List) pipeline.get("receivedArtifacts"))
       .map(list -> list.stream().map(it -> objectMapper.convertValue(it, Artifact.class)).collect(toList()))
       .orElse(emptyList());
-    List<Artifact> artifactsFromTrigger = Optional.ofNullable((List<?>) trigger.get("artifacts"))
+    List<Artifact> artifactsFromTrigger = (List<Artifact>) Optional.ofNullable((List) trigger.get("artifacts"))
       .map(list -> list.stream().map(it -> objectMapper.convertValue(it, Artifact.class)).collect(toList()))
       .orElse(emptyList());
-
-    List<Artifact> receivedArtifacts = Stream.concat(
-      receivedArtifactsFromPipeline.stream(),
-      artifactsFromTrigger.stream()
-    ).distinct().collect(toList());
+    List<Artifact> receivedArtifacts = Stream.concat(receivedArtifactsFromPipeline.stream(), artifactsFromTrigger.stream()).collect(toList());
 
     if (expectedArtifacts.isEmpty()) {
       try {
@@ -207,13 +176,13 @@ public class ArtifactResolver {
     }
 
     List<Artifact> priorArtifacts = getArtifactsForPipelineId((String) pipeline.get("id"), new ExecutionCriteria());
-    LinkedHashSet<Artifact> resolvedArtifacts = resolveExpectedArtifacts(expectedArtifacts, receivedArtifacts, priorArtifacts, true);
-    LinkedHashSet<Artifact> allArtifacts = new LinkedHashSet<>(receivedArtifacts);
+    Set<Artifact> resolvedArtifacts = resolveExpectedArtifacts(expectedArtifacts, receivedArtifacts, priorArtifacts, true);
+    Set<Artifact> allArtifacts = new HashSet<>(receivedArtifacts);
+
     allArtifacts.addAll(resolvedArtifacts);
 
     try {
       trigger.put("artifacts", objectMapper.readValue(objectMapper.writeValueAsString(allArtifacts), List.class));
-      trigger.put("expectedArtifacts", objectMapper.readValue(objectMapper.writeValueAsString(expectedArtifacts), List.class));
       trigger.put("resolvedExpectedArtifacts", objectMapper.readValue(objectMapper.writeValueAsString(expectedArtifacts), List.class)); // Add the actual expectedArtifacts we included in the ids.
     } catch (IOException e) {
       throw new ArtifactResolutionException("Failed to store artifacts in trigger: " + e.getMessage(), e);
@@ -221,9 +190,6 @@ public class ArtifactResolver {
   }
 
   public Artifact resolveSingleArtifact(ExpectedArtifact expectedArtifact, List<Artifact> possibleMatches, boolean requireUniqueMatches) {
-    if (expectedArtifact.getBoundArtifact() != null) {
-      return expectedArtifact.getBoundArtifact();
-    }
     List<Artifact> matches = possibleMatches
         .stream()
         .filter(expectedArtifact::matches)
@@ -250,9 +216,9 @@ public class ArtifactResolver {
     return resolveExpectedArtifacts(expectedArtifacts, receivedArtifacts, null, requireUniqueMatches);
   }
 
-  public LinkedHashSet<Artifact> resolveExpectedArtifacts(List<ExpectedArtifact> expectedArtifacts, List<Artifact> receivedArtifacts, List<Artifact> priorArtifacts, boolean requireUniqueMatches) {
-    LinkedHashSet<Artifact> resolvedArtifacts = new LinkedHashSet<>();
-    LinkedHashSet<ExpectedArtifact> unresolvedExpectedArtifacts = new LinkedHashSet<>();
+  public Set<Artifact> resolveExpectedArtifacts(List<ExpectedArtifact> expectedArtifacts, List<Artifact> receivedArtifacts, List<Artifact> priorArtifacts, boolean requireUniqueMatches) {
+    Set<Artifact> resolvedArtifacts = new HashSet<>();
+    Set<ExpectedArtifact> unresolvedExpectedArtifacts = new HashSet<>();
 
     for (ExpectedArtifact expectedArtifact : expectedArtifacts) {
       Artifact resolved = resolveSingleArtifact(expectedArtifact, receivedArtifacts, requireUniqueMatches);
@@ -286,6 +252,10 @@ public class ArtifactResolver {
   }
 
   private static class ArtifactResolutionException extends RuntimeException {
+    ArtifactResolutionException(String message) {
+      super(message);
+    }
+
     ArtifactResolutionException(String message, Throwable cause) {
       super(message, cause);
     }

@@ -50,7 +50,7 @@ import static java.lang.String.format;
 @Slf4j
 @Component
 @ConditionalOnExpression(value = "${pollers.restorePinnedServerGroups.enabled:false}")
-public class RestorePinnedServerGroupsPoller extends AbstractPollingNotificationAgent {
+class RestorePinnedServerGroupsPoller extends AbstractPollingNotificationAgent {
   private static final Logger log = LoggerFactory.getLogger(RestorePinnedServerGroupsPoller.class);
 
   private final ObjectMapper objectMapper;
@@ -89,7 +89,7 @@ public class RestorePinnedServerGroupsPoller extends AbstractPollingNotification
   }
 
   @VisibleForTesting
-  public RestorePinnedServerGroupsPoller(NotificationClusterLock notificationClusterLock,
+  RestorePinnedServerGroupsPoller(NotificationClusterLock notificationClusterLock,
                                   ObjectMapper objectMapper,
                                   OortService oortService,
                                   RetrySupport retrySupport,
@@ -184,7 +184,7 @@ public class RestorePinnedServerGroupsPoller extends AbstractPollingNotification
     }
   }
 
-  public List<PinnedServerGroupTag> fetchPinnedServerGroupTags() {
+  List<PinnedServerGroupTag> fetchPinnedServerGroupTags() {
     List<EntityTags> allEntityTags = retrySupport.retry(() -> objectMapper.convertValue(
       oortService.getEntityTags(ImmutableMap.<String, String>builder()
         .put("tag:" + PINNED_CAPACITY_TAG, "*")
@@ -211,7 +211,7 @@ public class RestorePinnedServerGroupsPoller extends AbstractPollingNotification
       .collect(Collectors.toList());
   }
 
-  public boolean hasCompletedExecution(PinnedServerGroupTag pinnedServerGroupTag) {
+  boolean hasCompletedExecution(PinnedServerGroupTag pinnedServerGroupTag) {
     try {
       Execution execution = executionRepository.retrieve(
         pinnedServerGroupTag.executionType, pinnedServerGroupTag.executionId
@@ -276,7 +276,7 @@ public class RestorePinnedServerGroupsPoller extends AbstractPollingNotification
       .build();
   }
 
-  public static class PinnedServerGroupTag {
+  private static class PinnedServerGroupTag {
     public String id;
 
     public String cloudProvider;

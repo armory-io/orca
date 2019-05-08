@@ -26,7 +26,7 @@ class EvaluateVariablesTaskSpec extends Specification {
   @Subject
   task = new EvaluateVariablesTask()
 
-  void "Should correctly copy evaluated variables"() {
+  void "Should correctly evaulate variables"() {
     setup:
     def stage = stage {
       refId = "1"

@@ -60,6 +60,6 @@ class UpsertAmazonDNSTask implements Task {
       "kato.last.task.id": taskId
     ]
 
-    return TaskResult.builder(SUCCEEDED).context(outputs).build()
+    return new TaskResult(SUCCEEDED, outputs)
   }
 }

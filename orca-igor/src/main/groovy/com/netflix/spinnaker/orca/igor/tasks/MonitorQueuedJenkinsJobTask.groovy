@@ -46,14 +46,14 @@ class MonitorQueuedJenkinsJobTask implements OverridableTimeoutRetryableTask {
     try {
       Map<String, Object> build = buildService.queuedBuild(master, queuedBuild)
       if (build?.number == null) {
-        return TaskResult.ofStatus(ExecutionStatus.RUNNING)
+        return new TaskResult(ExecutionStatus.RUNNING)
       } else {
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([buildNumber: build.number]).build()
+        return new TaskResult(ExecutionStatus.SUCCEEDED, [buildNumber: build.number])
       }
     } catch (RetrofitError e) {
       if ([503, 500, 404].contains(e.response?.status)) {
         log.warn("Http ${e.response.status} received from `igor`, retrying...")
-        return TaskResult.ofStatus(ExecutionStatus.RUNNING)
+        return new TaskResult(ExecutionStatus.RUNNING)
       }
       throw e
     }

@@ -40,12 +40,12 @@ class UpdateInstancesTask extends AbstractCloudProviderAwareTask implements Task
     TaskId taskId = kato.requestOperations(cloudProvider, [[updateInstances: stage.context]])
       .toBlocking()
       .first()
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
       "notification.type"  : "updateinstances",
       "update.account.name": account,
       "update.region"      : stage.context.region,
       "kato.last.task.id"  : taskId,
       "serverGroupName"    : stage.context.serverGroupName,
-    ]).build()
+    ])
   }
 }

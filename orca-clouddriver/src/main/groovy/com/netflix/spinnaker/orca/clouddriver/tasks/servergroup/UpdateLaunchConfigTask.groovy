@@ -55,13 +55,13 @@ class UpdateLaunchConfigTask implements Task, DeploymentDetailsAware, CloudProvi
     def taskId = kato.requestOperations(cloudProvider, ops)
         .toBlocking()
         .first()
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
         "notification.type"                        : "modifyasglaunchconfiguration",
         "modifyasglaunchconfiguration.account.name": getCredentials(stage),
         "modifyasglaunchconfiguration.region"      : stage.context.region,
         "kato.last.task.id"                        : taskId,
         "deploy.server.groups"                     : [(stage.context.region): [stage.context.serverGroupName ?: stage.context.asgName]]
-    ]).build()
+    ])
   }
 
   private getAwsOps(Stage stage) {

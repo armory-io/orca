@@ -58,6 +58,6 @@ class UpsertSecurityGroupTask extends AbstractCloudProviderAwareTask {
         "kato.last.task.id"   : taskId,
     ] + result.extraOutput
 
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build()
+    new TaskResult(ExecutionStatus.SUCCEEDED, outputs)
   }
 }

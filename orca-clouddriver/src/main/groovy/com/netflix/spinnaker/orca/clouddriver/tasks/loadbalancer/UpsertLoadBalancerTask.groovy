@@ -87,6 +87,6 @@ class UpsertLoadBalancerTask extends AbstractCloudProviderAwareTask implements R
       }
     ]
 
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build()
+    new TaskResult(ExecutionStatus.SUCCEEDED, outputs)
   }
 }

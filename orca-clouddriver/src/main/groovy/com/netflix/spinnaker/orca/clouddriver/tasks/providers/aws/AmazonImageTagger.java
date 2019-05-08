@@ -135,10 +135,6 @@ public class AmazonImageTagger extends ImageTagger implements CloudProviderAware
    */
   @Override
   public boolean areImagesTagged(Collection<Image> targetImages, Collection<String> consideredStageRefIds, Stage stage) {
-    if (targetImages.stream().anyMatch(image -> image.imageName == null)) {
-      return false;
-    }
-
     Collection<MatchedImage> matchedImages = findImages(
       targetImages.stream().map(targetImage -> targetImage.imageName).collect(Collectors.toSet()),
       consideredStageRefIds,
@@ -172,29 +168,6 @@ public class AmazonImageTagger extends ImageTagger implements CloudProviderAware
     }
 
     return isUpserted.get();
-  }
-
-  @Override
-  protected void foundAllImages(List<String> upstreamImageIds, Collection<?> foundImages) {
-    Set<String> foundAmis = new HashSet<>();
-    Collection<MatchedImage> matchedImages = ((Collection<MatchedImage>) foundImages);
-
-    for (MatchedImage matchedImage : matchedImages) {
-      matchedImage.amis.values().forEach(foundAmis::addAll);
-    }
-
-    if (foundAmis.size() < upstreamImageIds.size()) {
-      throw new ImageNotFound(
-        format("Only found %d images to tag but %d were specified upstream (found imageIds: %s, found imageNames: %s)",
-          foundAmis.size(),
-          upstreamImageIds.size(),
-          foundAmis,
-          matchedImages.stream()
-            .map(i -> i.imageName)
-            .collect(Collectors.toSet())),
-        true
-      );
-    }
   }
 
   @Override

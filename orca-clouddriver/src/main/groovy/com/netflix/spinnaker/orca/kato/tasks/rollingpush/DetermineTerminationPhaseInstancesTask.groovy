@@ -42,6 +42,6 @@ class DetermineTerminationPhaseInstancesTask implements Task {
             (TerminatingInstanceSupport.TERMINATE_REMAINING_INSTANCES): []
 
     ]
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build()
+    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs)
   }
 }

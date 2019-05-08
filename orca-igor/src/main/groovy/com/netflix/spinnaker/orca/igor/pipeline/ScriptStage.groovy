@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.orca.igor.pipeline
 
 import com.netflix.spinnaker.orca.CancellableStage
-import com.netflix.spinnaker.orca.igor.tasks.GetBuildPropertiesTask
 import com.netflix.spinnaker.orca.igor.tasks.MonitorJenkinsJobTask
 import com.netflix.spinnaker.orca.igor.tasks.MonitorQueuedJenkinsJobTask
 import com.netflix.spinnaker.orca.igor.tasks.StartScriptTask
@@ -45,7 +44,6 @@ class ScriptStage implements StageDefinitionBuilder, CancellableStage {
 
     if (!stage.getContext().getOrDefault("waitForCompletion", "true").toString().equalsIgnoreCase("false")) {
       builder.withTask("monitorScript", MonitorJenkinsJobTask)
-      builder.withTask("getBuildProperties", GetBuildPropertiesTask.class)
     }
   }
 

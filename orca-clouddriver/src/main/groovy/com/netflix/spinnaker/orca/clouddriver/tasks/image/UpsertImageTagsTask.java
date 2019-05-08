@@ -17,7 +17,6 @@
 package com.netflix.spinnaker.orca.clouddriver.tasks.image;
 
 import com.google.common.collect.ImmutableMap;
-import com.netflix.spinnaker.kork.core.RetrySupport;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.RetryableTask;
 import com.netflix.spinnaker.orca.TaskResult;
@@ -30,11 +29,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import retrofit.RetrofitError;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -46,9 +42,6 @@ public class UpsertImageTagsTask extends AbstractCloudProviderAwareTask implemen
 
   @Autowired
   List<ImageTagger> imageTaggers;
-
-  @Autowired
-  RetrySupport retrySupport;
 
   @Value("${tasks.upsertImageTagsTimeoutMillis:600000}")
   private Long upsertImageTagsTimeoutMillis;
@@ -62,35 +55,21 @@ public class UpsertImageTagsTask extends AbstractCloudProviderAwareTask implemen
       .findFirst()
       .orElseThrow(() -> new IllegalStateException("ImageTagger not found for cloudProvider " + cloudProvider));
 
-    List<Map<String, Map>> operations = new ArrayList<>();
-
     try {
       ImageTagger.OperationContext result = tagger.getOperationContext(stage);
-      operations.addAll(result.operations);
+      TaskId taskId = kato.requestOperations(cloudProvider, result.operations).toBlocking().first();
 
-      TaskId taskId = retrySupport.retry(() ->
-          kato.requestOperations(cloudProvider, result.operations).toBlocking().first(),
-        10, 5, false);
-
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(ImmutableMap.<String, Object>builder()
+      return new TaskResult(ExecutionStatus.SUCCEEDED, ImmutableMap.<String, Object>builder()
         .put("notification.type", "upsertimagetags")
         .put("kato.last.task.id", taskId)
         .putAll(result.extraOutput)
-        .build()).build();
+        .build()
+      );
     } catch (ImageTagger.ImageNotFound e) {
       if (e.shouldRetry) {
         log.error(String.format("Retrying... (reason: %s, executionId: %s, stageId: %s)", e.getMessage(), stage.getExecution().getId(), stage.getId()));
-        return TaskResult.RUNNING;
+        return new TaskResult(ExecutionStatus.RUNNING);
       }
-
-      throw e;
-    } catch (RetrofitError e) {
-      log.error(
-        "Failed creating clouddriver upsertimagetags task, cloudprovider: {}, operations: {}",
-        cloudProvider,
-        operations.isEmpty() ? "not found" : operations,
-        e
-      );
 
       throw e;
     }

@@ -19,6 +19,7 @@ package com.netflix.spinnaker.orca.pipelinetemplate.v1schema.graph.v2;
 import com.netflix.spinnaker.orca.pipelinetemplate.v1schema.graph.v2.transform.V2ConfigStageInjectionTransform;
 import com.netflix.spinnaker.orca.pipelinetemplate.v1schema.graph.v2.transform.V2DefaultVariableAssignmentTransform;
 import com.netflix.spinnaker.orca.pipelinetemplate.v2schema.V2PipelineTemplateVisitor;
+import com.netflix.spinnaker.orca.pipelinetemplate.v2schema.graph.V2PipelineConfigInheritanceTransform;
 import com.netflix.spinnaker.orca.pipelinetemplate.v2schema.model.V2PipelineTemplate;
 import com.netflix.spinnaker.orca.pipelinetemplate.v2schema.model.V2TemplateConfiguration;
 
@@ -31,6 +32,7 @@ public class V2GraphMutator {
 
   public V2GraphMutator(V2TemplateConfiguration configuration) {
     visitors.add(new V2DefaultVariableAssignmentTransform(configuration));
+    visitors.add(new V2PipelineConfigInheritanceTransform(configuration));
     visitors.add(new V2ConfigStageInjectionTransform(configuration));
   }
 

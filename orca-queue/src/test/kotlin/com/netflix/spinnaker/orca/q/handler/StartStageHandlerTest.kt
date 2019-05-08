@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.netflix.spectator.api.NoopRegistry
 import com.netflix.spinnaker.assertj.assertSoftly
 import com.netflix.spinnaker.orca.ExecutionStatus.*
-import com.netflix.spinnaker.orca.StageResolver
 import com.netflix.spinnaker.orca.events.StageStarted
 import com.netflix.spinnaker.orca.exceptions.ExceptionHandler
 import com.netflix.spinnaker.orca.fixture.pipeline
@@ -66,20 +65,16 @@ object StartStageHandlerTest : SubjectSpek<StartStageHandler>({
       repository,
       stageNavigator,
       DefaultStageDefinitionBuilderFactory(
-        StageResolver(
-          listOf(
-            singleTaskStage,
-            multiTaskStage,
-            stageWithSyntheticBefore,
-            stageWithSyntheticAfter,
-            stageWithParallelBranches,
-            rollingPushStage,
-            zeroTaskStage,
-            stageWithSyntheticAfterAndNoTasks,
-            webhookStage,
-            failPlanningStage
-          )
-        )
+        singleTaskStage,
+        multiTaskStage,
+        stageWithSyntheticBefore,
+        stageWithSyntheticAfter,
+        stageWithParallelBranches,
+        rollingPushStage,
+        zeroTaskStage,
+        stageWithSyntheticAfterAndNoTasks,
+        webhookStage,
+        failPlanningStage
       ),
       ContextParameterProcessor(),
       publisher,

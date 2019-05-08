@@ -51,7 +51,6 @@ class SpringLiquibaseProxy(
 
     // Then if anything else has been defined, do that afterwards
     sqlProperties.migration.additionalChangeLogs
-      .filter { !it.isEmpty() }
       .map {
         SpringLiquibase().apply {
           changeLog = "classpath:$it"

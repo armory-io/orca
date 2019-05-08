@@ -73,7 +73,10 @@ public class ReorderPipelinesTask implements Task {
     outputs.put("notification.type", "reorderpipelines");
     outputs.put("application", application);
 
-    return TaskResult.builder((response.getStatus() == HttpStatus.OK.value()) ? ExecutionStatus.SUCCEEDED : ExecutionStatus.TERMINAL).context(outputs).build();
+    return new TaskResult(
+      (response.getStatus() == HttpStatus.OK.value()) ? ExecutionStatus.SUCCEEDED : ExecutionStatus.TERMINAL,
+      outputs
+    );
   }
 
   private void validateTask(Stage stage) {

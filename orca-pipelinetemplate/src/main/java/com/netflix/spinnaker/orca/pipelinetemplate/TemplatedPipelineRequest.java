@@ -17,9 +17,7 @@ package com.netflix.spinnaker.orca.pipelinetemplate;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.netflix.spinnaker.kork.artifacts.model.ExpectedArtifact;
-import com.netflix.spinnaker.orca.pipelinetemplate.v1schema.model.NamedHashMap;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +30,6 @@ public class TemplatedPipelineRequest {
   Map<String, Object> trigger = new HashMap<>();
   Map<String, Object> config;
   Map<String, Object> template;
-  List<NamedHashMap> notifications = new ArrayList<>();
   String executionId;
   Boolean plan = false;
   boolean limitConcurrent = true;
@@ -93,14 +90,6 @@ public class TemplatedPipelineRequest {
 
   public Map<String, Object> getTemplate() {
     return template;
-  }
-
-  public void setNotifications(List<NamedHashMap> notifications) {
-    this.notifications = notifications;
-  }
-
-  public List<NamedHashMap> getNotifications() {
-    return notifications;
   }
 
   public void setTemplate(Map<String, Object> template) {

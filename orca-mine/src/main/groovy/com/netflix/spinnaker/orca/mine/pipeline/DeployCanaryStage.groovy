@@ -159,7 +159,7 @@ class DeployCanaryStage extends ParallelDeployStage implements CloudProviderAwar
       // if the canary is configured to continue on failure, we need to short-circuit if one of the deploys failed
       def unsuccessfulDeployStage = deployStages.find { s -> s.status != ExecutionStatus.SUCCEEDED }
       if (unsuccessfulDeployStage) {
-        return TaskResult.ofStatus(ExecutionStatus.TERMINAL)
+        return new TaskResult(ExecutionStatus.TERMINAL)
       }
       def deployedClusterPairs = []
       for (Map pair in context.clusterPairs) {
@@ -222,7 +222,7 @@ class DeployCanaryStage extends ParallelDeployStage implements CloudProviderAwar
       )
 
       canary.canaryDeployments = deployedClusterPairs
-      TaskResult.builder(ExecutionStatus.SUCCEEDED).context([canary: canary, deployedClusterPairs: deployedClusterPairs]).build()
+      new TaskResult(ExecutionStatus.SUCCEEDED, [canary: canary, deployedClusterPairs: deployedClusterPairs])
     }
   }
 

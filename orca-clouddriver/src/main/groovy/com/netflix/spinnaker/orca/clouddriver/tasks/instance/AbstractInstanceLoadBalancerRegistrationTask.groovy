@@ -38,10 +38,10 @@ abstract class AbstractInstanceLoadBalancerRegistrationTask extends AbstractClou
     def taskId = kato.requestOperations(getCloudProvider(stage), [[(getAction()): stage.context]])
         .toBlocking()
         .first()
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
         "notification.type"           : getAction().toLowerCase(),
         "kato.last.task.id"           : taskId,
         interestingHealthProviderNames: HealthHelper.getInterestingHealthProviderNames(stage, ["LoadBalancer", "TargetGroup"])
-    ]).build()
+    ])
   }
 }

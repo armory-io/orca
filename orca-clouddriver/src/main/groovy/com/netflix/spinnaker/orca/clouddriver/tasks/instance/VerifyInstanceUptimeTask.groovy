@@ -47,7 +47,7 @@ class VerifyInstanceUptimeTask extends AbstractCloudProviderAwareTask implements
   @Override
   TaskResult execute(Stage stage) {
     if (!instanceUptimeCommand || !stage.context.instanceUptimes) {
-      return TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+      return new TaskResult(ExecutionStatus.SUCCEEDED)
     }
 
     def cloudProvider = getCloudProvider(stage)
@@ -67,7 +67,7 @@ class VerifyInstanceUptimeTask extends AbstractCloudProviderAwareTask implements
       }
     }
 
-    return TaskResult.ofStatus(allInstancesHaveRebooted ? ExecutionStatus.SUCCEEDED : ExecutionStatus.RUNNING)
+    return new TaskResult(allInstancesHaveRebooted ? ExecutionStatus.SUCCEEDED : ExecutionStatus.RUNNING)
   }
 
   protected Map getInstance(String account, String region, String instanceId) {

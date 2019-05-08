@@ -48,7 +48,7 @@ class InstanceHealthCheckTask extends AbstractQuipTask implements RetryableTask 
     ExecutionStatus executionStatus = ExecutionStatus.SUCCEEDED
     //skipped instances
     if (!instances) {
-      return TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+      return new TaskResult(ExecutionStatus.SUCCEEDED)
     }
     // verify instance list, package, and version are in the context
     if(instances) {
@@ -59,7 +59,7 @@ class InstanceHealthCheckTask extends AbstractQuipTask implements RetryableTask 
           // ask kato for a refreshed version of the instance info
           instances = oortHelper.getInstancesForCluster(stage.context, null, true, false)
           stageOutputs << [instances: instances]
-          return TaskResult.builder(ExecutionStatus.RUNNING).context(stageOutputs).build()
+          return new TaskResult(ExecutionStatus.RUNNING, stageOutputs)
         }
 
         URL healthCheckUrl = new URL(instance.healthCheckUrl)
@@ -74,6 +74,6 @@ class InstanceHealthCheckTask extends AbstractQuipTask implements RetryableTask 
     } else {
       throw new RuntimeException("one or more required parameters are missing : instances")
     }
-    return TaskResult.builder(executionStatus).context(stageOutputs).build()
+    return new TaskResult(executionStatus, stageOutputs)
   }
 }

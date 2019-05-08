@@ -77,7 +77,7 @@ public class PromoteManifestKatoOutputsTask implements Task {
     addToOutputs(outputs, allResults, CREATED_ARTIFACTS_KEY, ARTIFACTS_KEY);
     convertKey(outputs, ARTIFACTS_KEY, artifactListType);
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).outputs(outputs).build();
+    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs, outputs);
   }
 
   private void convertKey(Map<String, Object> outputs, String key, TypeReference tr) {

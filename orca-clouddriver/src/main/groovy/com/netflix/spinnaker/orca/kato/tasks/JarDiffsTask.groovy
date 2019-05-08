@@ -71,7 +71,7 @@ class JarDiffsTask implements DiffTask {
     def retriesRemaining = stage.context.jarDiffsRetriesRemaining != null ? stage.context.jarDiffsRetriesRemaining : MAX_RETRIES
     if (retriesRemaining <= 0) {
       log.info("retries exceeded")
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([jarDiffsRetriesRemaining: retriesRemaining]).build()
+      return new TaskResult(ExecutionStatus.SUCCEEDED, [jarDiffsRetriesRemaining: retriesRemaining])
     }
 
     try {
@@ -92,7 +92,7 @@ class JarDiffsTask implements DiffTask {
 
       if (!targetInstances || !sourceInstances) {
         log.debug("No instances found (targetAsg: ${targetAsg}, sourceAsg: ${sourceAsg})")
-        return TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+        return new TaskResult(ExecutionStatus.SUCCEEDED)
       }
 
       // get jar json info
@@ -104,27 +104,19 @@ class JarDiffsTask implements DiffTask {
       LibraryDiffs jarDiffs = libraryDiffTool.calculateLibraryDiffs(sourceJarList, targetJarList)
 
       // add the diffs to the context
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([jarDiffs: jarDiffs]).build()
+      return new TaskResult(ExecutionStatus.SUCCEEDED, [jarDiffs: jarDiffs])
     } catch (Exception e) {
       // return success so we don't break pipelines
       log.error("error while fetching jar diffs, retrying", e)
-      return TaskResult.builder(ExecutionStatus.RUNNING).context([jarDiffsRetriesRemaining: --retriesRemaining]).build()
+      return new TaskResult(ExecutionStatus.RUNNING, [jarDiffsRetriesRemaining: --retriesRemaining])
     }
   }
 
   InstanceService createInstanceService(String address) {
-    def okHttpClient = new OkHttpClient(retryOnConnectionFailure: false)
-
-    // short circuit as quickly as possible security groups don't allow ingress to <instance>:8077
-    // (spinnaker applications don't allow this)
-    okHttpClient.setConnectTimeout(2, TimeUnit.SECONDS)
-    okHttpClient.setReadTimeout(2, TimeUnit.SECONDS)
-
     RestAdapter restAdapter = new RestAdapter.Builder()
       .setEndpoint(address)
-      .setClient(new OkClient(okHttpClient))
+      .setClient(new OkClient(new OkHttpClient(retryOnConnectionFailure: false)))
       .build()
-
     return restAdapter.create(InstanceService.class)
   }
 

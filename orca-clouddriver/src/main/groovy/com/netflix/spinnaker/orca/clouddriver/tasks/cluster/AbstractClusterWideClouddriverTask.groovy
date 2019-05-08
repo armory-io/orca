@@ -135,12 +135,12 @@ abstract class AbstractClusterWideClouddriverTask extends AbstractCloudProviderA
     }
 
     def taskId = katoService.requestOperations(clusterSelection.cloudProvider, katoOps).toBlocking().first()
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
       "notification.type"   : getNotificationType(),
       "deploy.account.name" : clusterSelection.credentials,
       "kato.last.task.id"   : taskId,
       "deploy.server.groups": locationGroups
-    ]).build()
+    ])
   }
 
   private static boolean shouldSkipTrafficGuardCheck(List<Map<String, Map>> katoOps) {

@@ -46,7 +46,7 @@ class ResizeAsgTask implements Task {
     def taskId = kato.requestOperations([[resizeAsgDescription: operation]])
                      .toBlocking()
                      .first()
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
         "notification.type"   : "resizeasg",
         "deploy.account.name" : operation.credentials,
         "kato.last.task.id"   : taskId,
@@ -56,7 +56,7 @@ class ResizeAsgTask implements Task {
           [(it): [operation.asgName]]
         }
 
-    ]).build()
+    ])
   }
 
   Map convert(Stage stage) {

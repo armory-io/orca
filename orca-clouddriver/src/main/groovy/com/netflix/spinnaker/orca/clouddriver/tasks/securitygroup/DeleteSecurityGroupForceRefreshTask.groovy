@@ -45,6 +45,6 @@ class DeleteSecurityGroupForceRefreshTask extends AbstractCloudProviderAwareTask
       def model = [securityGroupName: name, vpcId: vpcId, region: region, account: account, evict: true]
       cacheService.forceCacheUpdate(cloudProvider, REFRESH_TYPE, model)
     }
-    TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+    new TaskResult(ExecutionStatus.SUCCEEDED)
   }
 }

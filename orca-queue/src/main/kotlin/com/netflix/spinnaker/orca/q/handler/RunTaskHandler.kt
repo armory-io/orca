@@ -41,7 +41,7 @@ import com.netflix.spinnaker.orca.time.toDuration
 import com.netflix.spinnaker.orca.time.toInstant
 import com.netflix.spinnaker.q.Message
 import com.netflix.spinnaker.q.Queue
-import org.apache.commons.lang3.time.DurationFormatUtils
+import org.apache.commons.lang.time.DurationFormatUtils
 import org.slf4j.MDC
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -222,7 +222,7 @@ class RunTaskHandler(
           val durationString = formatTimeout(elapsedTime.toMillis())
           val msg = StringBuilder("${javaClass.simpleName} of stage ${stage.name} timed out after $durationString. ")
           msg.append("pausedDuration: ${formatTimeout(pausedDuration.toMillis())}, ")
-          msg.append("elapsedTime: ${formatTimeout(elapsedTime.toMillis())}, ")
+          msg.append("elapsedTime: ${formatTimeout(elapsedTime.toMillis())},")
           msg.append("timeoutValue: ${formatTimeout(actualTimeout.toMillis())}")
 
           log.warn(msg.toString())
@@ -305,6 +305,7 @@ class RunTaskHandler(
 
   private fun Stage.withLoggingContext(taskModel: com.netflix.spinnaker.orca.pipeline.model.Task, block: () -> Unit) {
     try {
+      MDC.put("application", this.execution.application)
       MDC.put("stageType", type)
       MDC.put("taskType", taskModel.implementingClass)
 
@@ -317,6 +318,7 @@ class RunTaskHandler(
       MDC.remove("stageType")
       MDC.remove("taskType")
       MDC.remove("taskStartTime")
+      MDC.remove("application")
     }
   }
 }

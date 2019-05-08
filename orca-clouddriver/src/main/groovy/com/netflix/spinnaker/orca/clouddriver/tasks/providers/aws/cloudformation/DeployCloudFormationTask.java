@@ -15,6 +15,7 @@
  */
 package com.netflix.spinnaker.orca.clouddriver.tasks.providers.aws.cloudformation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
 import com.netflix.spinnaker.kork.artifacts.model.Artifact;
@@ -31,8 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.parser.ParserException;
 import retrofit.client.Response;
 
 import javax.annotation.Nonnull;
@@ -49,6 +48,9 @@ public class DeployCloudFormationTask extends AbstractCloudProviderAwareTask imp
 
   @Autowired
   OortService oortService;
+
+  @Autowired
+  ObjectMapper objectMapper;
 
   @Autowired
   ArtifactResolver artifactResolver;
@@ -78,13 +80,9 @@ public class DeployCloudFormationTask extends AbstractCloudProviderAwareTask imp
       try {
         String template = CharStreams.toString(new InputStreamReader(response.getBody().in()));
         log.debug("Fetched template from artifact {}: {}", artifact.getReference(), template);
-        // attempt to deserialize template body to a map. supports YAML or JSON formatted templates.
-        Map<String, Object> templateBody = (Map<String, Object>) new Yaml().load(template);
-        task.put("templateBody", templateBody);
+        task.put("templateBody", objectMapper.readValue(template, Map.class));
       } catch (IOException e) {
         throw new IllegalArgumentException("Failed to read template from artifact definition "+ artifact, e);
-      } catch (ParserException e) {
-        throw new IllegalArgumentException("Template body must be valid JSON or YAML.", e);
       }
     }
 
@@ -113,7 +111,7 @@ public class DeployCloudFormationTask extends AbstractCloudProviderAwareTask imp
         .put("kato.last.task.id", taskId)
         .build();
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(context).build();
+    return new TaskResult(ExecutionStatus.SUCCEEDED, context);
   }
 
 }

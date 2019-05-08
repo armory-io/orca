@@ -50,15 +50,15 @@ class MonitorAcaTaskTask extends AbstractCloudProviderAwareTask implements Overr
       ]
     } catch (RetrofitError e) {
       log.error("Exception occurred while getting canary with id ${context.canary.id} from mine service", e)
-      return TaskResult.builder(ExecutionStatus.RUNNING).context(outputs).build()
+      return new TaskResult(ExecutionStatus.RUNNING, outputs)
     }
 
     if (outputs.canary.status?.complete) {
       log.info("Canary $stage.id complete")
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).outputs(outputs).build()
+      return new TaskResult(ExecutionStatus.SUCCEEDED, outputs, outputs)
     }
 
     log.info("Canary in progress: ${outputs.canary}")
-    return TaskResult.builder(ExecutionStatus.RUNNING).context(outputs).build()
+    return new TaskResult(ExecutionStatus.RUNNING, outputs)
   }
 }

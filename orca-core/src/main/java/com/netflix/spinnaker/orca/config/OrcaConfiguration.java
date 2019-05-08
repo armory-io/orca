@@ -18,9 +18,6 @@ package com.netflix.spinnaker.orca.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spinnaker.kork.core.RetrySupport;
-import com.netflix.spinnaker.orca.StageResolver;
-import com.netflix.spinnaker.orca.Task;
-import com.netflix.spinnaker.orca.TaskResolver;
 import com.netflix.spinnaker.orca.commands.ForceExecutionCancellationCommand;
 import com.netflix.spinnaker.orca.events.ExecutionEvent;
 import com.netflix.spinnaker.orca.events.ExecutionListenerAdapter;
@@ -32,10 +29,10 @@ import com.netflix.spinnaker.orca.listeners.*;
 import com.netflix.spinnaker.orca.pipeline.DefaultStageDefinitionBuilderFactory;
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder;
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilderFactory;
-import com.netflix.spinnaker.orca.pipeline.expressions.ExpressionFunctionProvider;
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
 import com.netflix.spinnaker.orca.pipeline.util.ContextFunctionConfiguration;
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor;
+import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -46,7 +43,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.EventListenerFactory;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
@@ -55,15 +51,13 @@ import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import rx.Notification;
 import rx.Scheduler;
 import rx.schedulers.Schedulers;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.springframework.context.annotation.AnnotationConfigUtils.EVENT_LISTENER_FACTORY_BEAN_NAME;
@@ -74,11 +68,9 @@ import static org.springframework.context.annotation.AnnotationConfigUtils.EVENT
   "com.netflix.spinnaker.orca.pipeline",
   "com.netflix.spinnaker.orca.deprecation",
   "com.netflix.spinnaker.orca.pipeline.util",
-  "com.netflix.spinnaker.orca.preprocessors",
   "com.netflix.spinnaker.orca.telemetry",
   "com.netflix.spinnaker.orca.notifications.scheduling"
 })
-@Import(PreprocessorConfiguration.class)
 @EnableConfigurationProperties
 public class OrcaConfiguration {
   @Bean public Clock clock() {
@@ -130,13 +122,9 @@ public class OrcaConfiguration {
 
   @Bean
   public ContextFunctionConfiguration contextFunctionConfiguration(UserConfiguredUrlRestrictions userConfiguredUrlRestrictions,
-                                                                   Optional<List<ExpressionFunctionProvider>> expressionFunctionProviders,
-                                                                   @Value("${spelEvaluator:v2}") String spelEvaluator) {
-    return new ContextFunctionConfiguration(
-      userConfiguredUrlRestrictions,
-      expressionFunctionProviders.orElse(Collections.emptyList()),
-      spelEvaluator
-    );
+                                                                   @Value("${spelEvaluator:v2}")
+                                                                     String spelEvaluator) {
+    return new ContextFunctionConfiguration(userConfiguredUrlRestrictions, spelEvaluator);
   }
 
   @Bean
@@ -151,8 +139,8 @@ public class OrcaConfiguration {
 
   @Bean
   @ConditionalOnMissingBean(StageDefinitionBuilderFactory.class)
-  public StageDefinitionBuilderFactory stageDefinitionBuilderFactory(StageResolver stageResolver) {
-    return new DefaultStageDefinitionBuilderFactory(stageResolver);
+  public StageDefinitionBuilderFactory stageDefinitionBuilderFactory(Collection<StageDefinitionBuilder> stageDefinitionBuilders) {
+    return new DefaultStageDefinitionBuilderFactory(stageDefinitionBuilders);
   }
 
   @Bean
@@ -185,16 +173,6 @@ public class OrcaConfiguration {
     scheduler.setThreadNamePrefix("scheduler-");
     scheduler.setPoolSize(10);
     return scheduler;
-  }
-
-  @Bean
-  public TaskResolver taskResolver(Collection<Task> tasks) {
-    return new TaskResolver(tasks, true);
-  }
-
-  @Bean
-  public StageResolver stageResolver(Collection<StageDefinitionBuilder> stageDefinitionBuilders) {
-    return new StageResolver(stageDefinitionBuilders);
   }
 
   @Bean(name = EVENT_LISTENER_FACTORY_BEAN_NAME)

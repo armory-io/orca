@@ -63,6 +63,6 @@ public abstract class GenericUpdateManifestTask extends AbstractCloudProviderAwa
           ).build())
         .build();
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build();
+    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs);
   }
 }

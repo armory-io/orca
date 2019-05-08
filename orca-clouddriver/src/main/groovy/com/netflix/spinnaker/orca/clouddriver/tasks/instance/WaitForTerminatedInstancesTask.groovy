@@ -41,7 +41,8 @@ class WaitForTerminatedInstancesTask extends AbstractCloudProviderAwareTask impl
   TaskResult execute(Stage stage) {
     List<TerminatingInstance> remainingInstances = instanceSupport.remainingInstances(stage)
     return remainingInstances ?
-        TaskResult.builder(ExecutionStatus.RUNNING).context([(TerminatingInstanceSupport.TERMINATE_REMAINING_INSTANCES): remainingInstances]).build() :
+        new TaskResult(ExecutionStatus.RUNNING,
+                              [(TerminatingInstanceSupport.TERMINATE_REMAINING_INSTANCES): remainingInstances]) :
       TaskResult.SUCCEEDED
   }
 }

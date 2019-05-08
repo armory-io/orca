@@ -59,18 +59,6 @@ class CreateWebhookTask implements RetryableTask {
     def response
     try {
       response = webhookService.exchange(stageData.method, stageData.url, stageData.payload, stageData.customHeaders)
-    } catch (IllegalArgumentException e) {
-      if (e.cause instanceof UnknownHostException) {
-        String errorMessage = "name resolution failure in webhook for pipeline ${stage.execution.id} to ${stageData.url}, will retry."
-        log.warn(errorMessage, e)
-        outputs.webhook << [error: errorMessage]
-        return TaskResult.builder(ExecutionStatus.RUNNING).context(outputs).build()
-      } else {
-        String errorMessage = "an exception occurred in webhook to ${stageData.url}: ${e}"
-        log.error(errorMessage, e)
-        outputs.webhook << [error: errorMessage]
-        return TaskResult.builder(ExecutionStatus.TERMINAL).context(outputs).build()
-      }
     } catch (HttpStatusCodeException e) {
       def statusCode = e.getStatusCode()
 
@@ -98,7 +86,7 @@ class CreateWebhookTask implements RetryableTask {
         String webhookMessage = "Received a status code configured to fail fast, terminating stage."
         outputs.webhook << [error: webhookMessage]
 
-        return TaskResult.builder(ExecutionStatus.TERMINAL).context(outputs).build()
+        return new TaskResult(ExecutionStatus.TERMINAL, outputs)
       }
 
       if (statusCode.is5xxServerError() || statusCode.value() == 429) {
@@ -107,13 +95,13 @@ class CreateWebhookTask implements RetryableTask {
 
         outputs.webhook << [error: errorMessage]
 
-        return TaskResult.builder(ExecutionStatus.RUNNING).context(outputs).build()
+        return new TaskResult(ExecutionStatus.RUNNING, outputs)
       }
 
       String errorMessage = "Error submitting webhook for pipeline ${stage.execution.id} to ${stageData.url} with status code ${statusCode}."
       outputs.webhook << [error: errorMessage]
 
-      return TaskResult.builder(ExecutionStatus.TERMINAL).context(outputs).build()
+      return new TaskResult(ExecutionStatus.TERMINAL, outputs)
     }
 
     def statusCode = response.statusCode
@@ -142,7 +130,7 @@ class CreateWebhookTask implements RetryableTask {
               statusUrl = new JsonContext().parse(response.body).read(path)
             } catch (PathNotFoundException e) {
               outputs.webhook << [error: e.message]
-              return TaskResult.builder(ExecutionStatus.TERMINAL).context(outputs).build()
+              return new TaskResult(ExecutionStatus.TERMINAL, outputs)
             }
         }
         if (!statusUrl || !(statusUrl instanceof String)) {
@@ -150,11 +138,11 @@ class CreateWebhookTask implements RetryableTask {
             error         : "The status URL couldn't be resolved, but 'Wait for completion' was checked",
             statusEndpoint: statusUrl
           ]
-          return TaskResult.builder(ExecutionStatus.TERMINAL).context(outputs).build()
+          return new TaskResult(ExecutionStatus.TERMINAL, outputs)
         }
         stage.context.statusEndpoint = statusUrl
         outputs.webhook << [statusEndpoint: statusUrl]
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputsDeprecated + outputs).build()
+        return new TaskResult(ExecutionStatus.SUCCEEDED, outputsDeprecated + outputs)
       }
       if (stage.context.containsKey("expectedArtifacts") && !((List) stage.context.get("expectedArtifacts")).isEmpty()) {
         try {
@@ -162,13 +150,13 @@ class CreateWebhookTask implements RetryableTask {
           outputs << [artifacts: artifacts]
         } catch (Exception e) {
           outputs.webhook << [error: "Expected artifacts in webhook response none were found"]
-          return TaskResult.builder(ExecutionStatus.TERMINAL).context(outputs).build()
+          return new TaskResult(ExecutionStatus.TERMINAL, outputs)
         }
       }
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputsDeprecated + outputs).build()
+      return new TaskResult(ExecutionStatus.SUCCEEDED, outputsDeprecated + outputs)
     } else {
       outputs.webhook << [error: "The webhook request failed"]
-      return TaskResult.builder(ExecutionStatus.TERMINAL).context(outputsDeprecated + outputs).build()
+      return new TaskResult(ExecutionStatus.TERMINAL, outputsDeprecated + outputs)
     }
   }
 

@@ -21,9 +21,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;
 
-@ConfigurationProperties("job.preconfigured")
+@ConfigurationProperties("job")
 @Data
 public class JobConfigurationProperties {
-  List<TitusPreconfiguredJobProperties> titus;
-  List<KubernetesPreconfiguredJobProperties> kubernetes;
+  List<PreconfiguredJobStageProperties> preconfigured;
 }

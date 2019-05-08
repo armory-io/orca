@@ -26,18 +26,18 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 
-public class PollerSupport {
+class PollerSupport {
   private final ObjectMapper objectMapper;
   private final RetrySupport retrySupport;
   private final OortService oortService;
 
-  public PollerSupport(ObjectMapper objectMapper, RetrySupport retrySupport, OortService oortService) {
+  PollerSupport(ObjectMapper objectMapper, RetrySupport retrySupport, OortService oortService) {
     this.objectMapper = objectMapper;
     this.retrySupport = retrySupport;
     this.oortService = oortService;
   }
 
-  public Optional<ServerGroup> fetchServerGroup(String account, String region, String name) {
+  Optional<ServerGroup> fetchServerGroup(String account, String region, String name) {
     return retrySupport.retry(() -> {
       try {
         Response response = oortService.getServerGroup(account, region, name);

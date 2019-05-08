@@ -18,7 +18,7 @@ package com.netflix.spinnaker.orca.q.handler
 
 import com.netflix.spinnaker.orca.ExecutionStatus.PAUSED
 import com.netflix.spinnaker.orca.ExecutionStatus.RUNNING
-import com.netflix.spinnaker.orca.TaskResolver
+import com.netflix.spinnaker.orca.Task
 import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository
 import com.netflix.spinnaker.orca.q.ResumeTask
 import com.netflix.spinnaker.orca.q.RunTask
@@ -28,8 +28,7 @@ import org.springframework.stereotype.Component
 @Component
 class ResumeTaskHandler(
   override val queue: Queue,
-  override val repository: ExecutionRepository,
-  private val taskResolver: TaskResolver
+  override val repository: ExecutionRepository
 ) : OrcaMessageHandler<ResumeTask> {
 
   override val messageType = ResumeTask::class.java
@@ -49,5 +48,5 @@ class ResumeTaskHandler(
 
   @Suppress("UNCHECKED_CAST")
   private val com.netflix.spinnaker.orca.pipeline.model.Task.type
-    get() = taskResolver.getTaskClass(implementingClass)
+    get() = Class.forName(implementingClass) as Class<out Task>
 }

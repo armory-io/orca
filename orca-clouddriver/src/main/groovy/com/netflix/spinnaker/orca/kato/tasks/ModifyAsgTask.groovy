@@ -38,10 +38,10 @@ class ModifyAsgTask implements Task {
 
     def deployServerGroups = AsgDescriptionSupport.convertAsgsToDeploymentTargets(stage.context.asgs)
 
-    TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    new TaskResult(ExecutionStatus.SUCCEEDED, [
         "notification.type"     : "modifyasg",
         "deploy.server.groups"  : deployServerGroups,
         "kato.last.task.id"     : taskId,
-    ]).build()
+    ])
   }
 }

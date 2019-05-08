@@ -48,17 +48,17 @@ public class WaitUntilTask implements RetryableTask {
     WaitUntilStage.WaitUntilStageContext context = stage.mapTo(WaitUntilStage.WaitUntilStageContext.class);
 
     if (context.getEpochMillis() == null) {
-      return TaskResult.SUCCEEDED;
+      return new TaskResult(SUCCEEDED);
     }
 
     Instant now = clock.instant();
 
     if (context.getStartTime() == null || context.getStartTime() == Instant.EPOCH) {
-      return TaskResult.builder(RUNNING).context(singletonMap("startTime", now)).build();
+      return new TaskResult(RUNNING, singletonMap("startTime", now));
     } else if (context.getEpochMillis() <= now.toEpochMilli()) {
-      return TaskResult.SUCCEEDED;
+      return new TaskResult(SUCCEEDED);
     } else {
-      return TaskResult.RUNNING;
+      return new TaskResult(RUNNING);
     }
   }
 

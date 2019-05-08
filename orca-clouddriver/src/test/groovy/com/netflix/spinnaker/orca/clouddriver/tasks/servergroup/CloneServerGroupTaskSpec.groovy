@@ -19,7 +19,6 @@ package com.netflix.spinnaker.orca.clouddriver.tasks.servergroup
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.netflix.spinnaker.orca.clouddriver.KatoService
 import com.netflix.spinnaker.orca.clouddriver.model.TaskId
-import com.netflix.spinnaker.orca.clouddriver.tasks.servergroup.clone.BakeryImageAccessDescriptionDecorator
 import com.netflix.spinnaker.orca.jackson.OrcaObjectMapper
 import com.netflix.spinnaker.orca.pipeline.model.Stage
 import com.netflix.spinnaker.orca.test.model.ExecutionBuilder
@@ -48,7 +47,6 @@ class CloneServerGroupTaskSpec extends Specification {
     mapper.registerModule(new GuavaModule())
 
     task.mapper = mapper
-    task.cloneDescriptionDecorators = [new BakeryImageAccessDescriptionDecorator()]
 
     stage.execution.stages.add(stage)
     stage.context = cloneServerGroupConfig
@@ -69,10 +67,10 @@ class CloneServerGroupTaskSpec extends Specification {
 
     then:
     operations.size() == 3
-    operations[0].cloneServerGroup.amiName == "hodor-image"
-    operations[0].cloneServerGroup.application == "hodor"
-    operations[0].cloneServerGroup.availabilityZones == ["us-east-1": ["a", "d"], "us-west-1": ["a", "b"]]
-    operations[0].cloneServerGroup.credentials == "fzlem"
+    operations[2].cloneServerGroup.amiName == "hodor-image"
+    operations[2].cloneServerGroup.application == "hodor"
+    operations[2].cloneServerGroup.availabilityZones == ["us-east-1": ["a", "d"], "us-west-1": ["a", "b"]]
+    operations[2].cloneServerGroup.credentials == "fzlem"
   }
 
   def "can include optional parameters"() {
@@ -93,7 +91,7 @@ class CloneServerGroupTaskSpec extends Specification {
 
     then:
     operations.size() == 3
-    with(operations[0].cloneServerGroup) {
+    with(operations[2].cloneServerGroup) {
       amiName == "hodor-image"
       application == "hodor"
       availabilityZones == ["us-east-1": ["a", "d"], "us-west-1": ["a", "b"]]
@@ -122,7 +120,7 @@ class CloneServerGroupTaskSpec extends Specification {
 
     then:
     operations.size() == 3
-    with(operations[0].cloneServerGroup) {
+    with(operations[2].cloneServerGroup) {
       amiName == contextAmi
       application == "hodor"
       availabilityZones == ["us-east-1": ["a", "d"], "us-west-1": ["a", "b"]]
@@ -158,7 +156,7 @@ class CloneServerGroupTaskSpec extends Specification {
 
     then:
     operations.size() == 3
-    with(operations[0].cloneServerGroup) {
+    with(operations[2].cloneServerGroup) {
       amiName == bakeAmi
       application == "hodor"
       availabilityZones == ["us-east-1": ["a", "d"], "us-west-1": ["a", "b"]]
@@ -221,11 +219,11 @@ class CloneServerGroupTaskSpec extends Specification {
 
     then:
     operations.size() == 3
-    operations[0].cloneServerGroup.amiName == contextAmi
+    operations[0].allowLaunchDescription.amiName == contextAmi
+    operations[0].allowLaunchDescription.region == "us-east-1"
     operations[1].allowLaunchDescription.amiName == contextAmi
-    operations[1].allowLaunchDescription.region == "us-east-1"
-    operations[2].allowLaunchDescription.amiName == contextAmi
-    operations[2].allowLaunchDescription.region == "us-west-1"
+    operations[1].allowLaunchDescription.region == "us-west-1"
+    operations[2].cloneServerGroup.amiName == contextAmi
 
     where:
     contextAmi = "ami-ctx"
@@ -249,6 +247,7 @@ class CloneServerGroupTaskSpec extends Specification {
 
     then:
     operations.size() == 2
-    operations[1].allowLaunchDescription.region == "eu-west-1"
+    operations[0].allowLaunchDescription.region == "eu-west-1"
+
   }
 }

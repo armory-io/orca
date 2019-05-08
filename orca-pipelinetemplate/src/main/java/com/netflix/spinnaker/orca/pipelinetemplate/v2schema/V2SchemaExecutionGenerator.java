@@ -19,7 +19,6 @@ package com.netflix.spinnaker.orca.pipelinetemplate.v2schema;
 import com.netflix.spinnaker.orca.pipelinetemplate.TemplatedPipelineRequest;
 import com.netflix.spinnaker.orca.pipelinetemplate.generator.V2ExecutionGenerator;
 import com.netflix.spinnaker.orca.pipelinetemplate.v1schema.TemplateMerge;
-import com.netflix.spinnaker.orca.pipelinetemplate.v1schema.graph.v2.transform.V2DefaultVariableAssignmentTransform;
 import com.netflix.spinnaker.orca.pipelinetemplate.v2schema.model.V2PipelineTemplate;
 import com.netflix.spinnaker.orca.pipelinetemplate.v2schema.model.V2TemplateConfiguration;
 
@@ -47,8 +46,7 @@ public class V2SchemaExecutionGenerator implements V2ExecutionGenerator {
     addNotifications(pipeline, template, configuration);
     addParameters(pipeline, template, configuration);
     addTriggers(pipeline, template, configuration);
-    pipeline.put("templateVariables",
-      V2DefaultVariableAssignmentTransform.configurationVariables(template.getVariables(), configuration.getVariables()));
+    pipeline.put("templateVariables", configuration.getVariables());
 
     if (request.getTrigger() != null && !request.getTrigger().isEmpty()) {
       pipeline.put("trigger", request.getTrigger());
@@ -58,12 +56,7 @@ public class V2SchemaExecutionGenerator implements V2ExecutionGenerator {
   }
 
   private void addNotifications(Map<String, Object> pipeline, V2PipelineTemplate template, V2TemplateConfiguration configuration) {
-    if (configuration.getExclude().contains("notifications")) {
-      pipeline.put(
-        "notifications",
-        Optional.ofNullable(configuration.getNotifications()).orElse(Collections.emptyList())
-      );
-    } else {
+    if (configuration.getInherit().contains("notifications")) {
       pipeline.put(
         "notifications",
         TemplateMerge.mergeDistinct(
@@ -71,16 +64,16 @@ public class V2SchemaExecutionGenerator implements V2ExecutionGenerator {
           configuration.getNotifications()
         )
       );
+    } else {
+      pipeline.put(
+        "notifications",
+        Optional.ofNullable(configuration.getNotifications()).orElse(Collections.emptyList())
+      );
     }
   }
 
   private void addParameters(Map<String, Object> pipeline, V2PipelineTemplate template, V2TemplateConfiguration configuration) {
-    if (configuration.getExclude().contains("parameters")) {
-      pipeline.put(
-        "parameterConfig",
-        Optional.ofNullable(configuration.getParameters()).orElse(Collections.emptyList())
-      );
-    } else {
+    if (configuration.getInherit().contains("parameters")) {
       pipeline.put(
         "parameterConfig",
         TemplateMerge.mergeDistinct(
@@ -88,24 +81,29 @@ public class V2SchemaExecutionGenerator implements V2ExecutionGenerator {
           configuration.getParameters()
         )
       );
+    } else {
+      pipeline.put(
+        "parameterConfig",
+        Optional.ofNullable(configuration.getParameters()).orElse(Collections.emptyList())
+      );
     }
   }
 
   private void addTriggers(Map<String, Object> pipeline,
                            V2PipelineTemplate template,
                            V2TemplateConfiguration configuration) {
-    if (configuration.getExclude().contains("triggers")) {
-      pipeline.put(
-        "triggers",
-        Optional.ofNullable(configuration.getTriggers()).orElse(Collections.emptyList())
-      );
-    } else {
+    if (configuration.getInherit().contains("triggers")) {
       pipeline.put(
         "triggers",
         TemplateMerge.mergeDistinct(
           (List<HashMap<String, Object>>) template.getPipeline().get("triggers"),
           configuration.getTriggers()
         )
+      );
+    } else {
+      pipeline.put(
+        "triggers",
+        Optional.ofNullable(configuration.getTriggers()).orElse(Collections.emptyList())
       );
     }
   }

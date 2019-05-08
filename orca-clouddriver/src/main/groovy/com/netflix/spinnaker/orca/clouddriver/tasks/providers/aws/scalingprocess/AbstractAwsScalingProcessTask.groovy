@@ -89,9 +89,9 @@ abstract class AbstractAwsScalingProcessTask extends AbstractCloudProviderAwareT
       stageOutputs."kato.last.task.id" = taskId
     }
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(stageOutputs).outputs([
+    return new TaskResult(ExecutionStatus.SUCCEEDED, stageOutputs, [
       ("scalingProcesses.${asgName}" as String): stageContext.processes
-    ]).build()
+    ])
   }
 
   static class StageData {

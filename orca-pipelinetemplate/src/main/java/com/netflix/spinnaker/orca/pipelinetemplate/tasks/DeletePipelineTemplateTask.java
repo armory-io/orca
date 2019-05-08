@@ -53,7 +53,10 @@ public class DeletePipelineTemplateTask implements RetryableTask {
     outputs.put("notification.type", "deletepipelinetemplate");
     outputs.put("pipeline.id", templateId);
 
-    return TaskResult.builder((response.getStatus() == HttpStatus.OK.value()) ? ExecutionStatus.SUCCEEDED : ExecutionStatus.TERMINAL).context(outputs).build();
+    return new TaskResult(
+      (response.getStatus() == HttpStatus.OK.value()) ? ExecutionStatus.SUCCEEDED : ExecutionStatus.TERMINAL,
+      outputs
+    );
   }
 
   @Override

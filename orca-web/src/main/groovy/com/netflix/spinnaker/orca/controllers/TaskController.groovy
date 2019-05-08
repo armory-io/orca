@@ -508,14 +508,9 @@ class TaskController {
                                      @RequestParam("expression")
                                        String expression) {
     def execution = executionRepository.retrieve(PIPELINE, id)
-    def context = [
-      execution: execution,
-      trigger: mapper.convertValue(execution.trigger, Map.class)
-    ]
-
     def evaluated = contextParameterProcessor.process(
       [expression: expression],
-      context,
+      [execution: execution],
       true
     )
     return [result: evaluated?.expression, detail: evaluated?.expressionEvaluationSummary]

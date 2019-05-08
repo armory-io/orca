@@ -111,7 +111,7 @@ public class PatchManifestTask extends AbstractCloudProviderAwareTask implements
       .put("deploy.account.name", credentials)
       .build();
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build();
+    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs);
   }
 
   // TODO(dibyom) : Refactor into ManifestArtifact utils class for both Deploy and Patch.

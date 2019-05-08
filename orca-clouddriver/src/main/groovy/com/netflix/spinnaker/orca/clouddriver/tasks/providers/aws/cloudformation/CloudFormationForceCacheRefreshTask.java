@@ -26,9 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collections;
 
 @Component
 public class CloudFormationForceCacheRefreshTask extends AbstractCloudProviderAwareTask implements Task {
@@ -41,20 +39,8 @@ public class CloudFormationForceCacheRefreshTask extends AbstractCloudProviderAw
   public TaskResult execute(@Nonnull Stage stage) {
     String cloudProvider = getCloudProvider(stage);
 
-    Map<String, Object> data = new HashMap<>();
-        
-    String credentials = getCredentials(stage);
-    if (credentials != null) {
-      data.put("credentials", credentials);
-    }
-    
-    List<String> regions = (List<String>) stage.getContext().get("regions");
-    if (regions != null && !regions.isEmpty()) {
-      data.put("region", regions);
-    }
-    
-    cacheService.forceCacheUpdate(cloudProvider, REFRESH_TYPE, data);
+    cacheService.forceCacheUpdate(cloudProvider, REFRESH_TYPE, Collections.emptyMap());
 
-    return TaskResult.SUCCEEDED;
+    return new TaskResult(ExecutionStatus.SUCCEEDED);
   }
 }

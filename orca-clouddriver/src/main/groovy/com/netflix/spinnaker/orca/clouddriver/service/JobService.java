@@ -21,7 +21,6 @@ import com.netflix.spinnaker.orca.clouddriver.config.PreconfiguredJobStageProper
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,21 +30,11 @@ public class JobService {
 
   @Autowired JobConfigurationProperties jobConfigurationProperties;
 
-  public List<PreconfiguredJobStageProperties> getPreconfiguredStages() {
-    if(jobConfigurationProperties.getTitus()==null && jobConfigurationProperties.getKubernetes()==null){
+  List<PreconfiguredJobStageProperties> getPreconfiguredStages() {
+    if(jobConfigurationProperties.getPreconfigured()==null){
       return Collections.EMPTY_LIST;
     }
-
-    List<PreconfiguredJobStageProperties> preconfiguredJobStageProperties = new ArrayList<>();
-    if (jobConfigurationProperties.getTitus() != null && !jobConfigurationProperties.getTitus().isEmpty()) {
-      preconfiguredJobStageProperties.addAll(jobConfigurationProperties.getTitus());
-    }
-
-    if (jobConfigurationProperties.getKubernetes() != null && !jobConfigurationProperties.getKubernetes().isEmpty()) {
-      preconfiguredJobStageProperties.addAll(jobConfigurationProperties.getKubernetes());
-    }
-
-    return preconfiguredJobStageProperties;
+    return jobConfigurationProperties.getPreconfigured().stream().filter(it -> it.enabled == true).collect(Collectors.toList());
   }
 
 }

@@ -16,15 +16,14 @@
 
 package com.netflix.spinnaker.orca.dryrun
 
-import com.netflix.spinnaker.orca.StageResolver
 import com.netflix.spinnaker.orca.pipeline.CheckPreconditionsStage
 import com.netflix.spinnaker.orca.pipeline.DefaultStageDefinitionBuilderFactory
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder
 import com.netflix.spinnaker.orca.pipeline.model.Stage
 
 class DryRunStageDefinitionBuilderFactory(
-  stageResolver: StageResolver
-) : DefaultStageDefinitionBuilderFactory(stageResolver) {
+  stageDefinitionBuilders: Collection<StageDefinitionBuilder>
+) : DefaultStageDefinitionBuilderFactory(stageDefinitionBuilders) {
 
   override fun builderFor(stage: Stage): StageDefinitionBuilder =
     stage.execution.let { execution ->
@@ -38,13 +37,7 @@ class DryRunStageDefinitionBuilderFactory(
     }
 
   private val Stage.shouldExecuteNormallyInDryRun: Boolean
-    get() = isManualJudgment ||
-      isPipeline ||
-      isExpressionPrecondition ||
-      isFindImage ||
-      isDetermineTargetServerGroup ||
-      isRollbackCluster ||
-      isEvalVariables
+    get() = isManualJudgment || isPipeline || isExpressionPrecondition || isFindImage || isDetermineTargetServerGroup || isRollbackCluster
 
   private val Stage.isManualJudgment: Boolean
     get() = type == "manualJudgment"
@@ -75,7 +68,4 @@ class DryRunStageDefinitionBuilderFactory(
 
   private val Stage.isRollbackCluster: Boolean
     get() = type == "rollbackCluster"
-
-  private val Stage.isEvalVariables: Boolean
-    get() = type == "evaluateVariables"
 }

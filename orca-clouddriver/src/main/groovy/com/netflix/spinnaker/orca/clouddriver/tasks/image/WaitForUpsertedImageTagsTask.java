@@ -48,7 +48,9 @@ public class WaitForUpsertedImageTagsTask implements RetryableTask, CloudProvide
       .orElseThrow(() -> new IllegalStateException("ImageTagger not found for cloudProvider " + cloudProvider));
 
     StageData stageData = stage.mapTo(StageData.class);
-    return TaskResult.ofStatus(tagger.areImagesTagged(stageData.targets, stageData.consideredStages, stage) ? ExecutionStatus.SUCCEEDED : ExecutionStatus.RUNNING);
+    return new TaskResult(
+      tagger.areImagesTagged(stageData.targets, stageData.consideredStages, stage) ? ExecutionStatus.SUCCEEDED : ExecutionStatus.RUNNING
+    );
   }
 
   @Override

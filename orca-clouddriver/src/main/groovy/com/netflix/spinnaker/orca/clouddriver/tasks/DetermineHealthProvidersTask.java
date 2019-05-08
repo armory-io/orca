@@ -83,18 +83,18 @@ public class DetermineHealthProvidersTask implements RetryableTask, CloudProvide
         results.put("interestingHealthProviderNames", interestingHealthProviderNames);
       }
 
-      return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(results).build();
+      return new TaskResult(ExecutionStatus.SUCCEEDED, results);
     }
 
     if (stage.getContext().containsKey("interestingHealthProviderNames")) {
       // should not override any stage-specified health providers
-      return TaskResult.SUCCEEDED;
+      return new TaskResult(ExecutionStatus.SUCCEEDED);
     }
 
     String platformSpecificHealthProviderName = healthProviderNamesByPlatform.get(getCloudProvider(stage));
     if (platformSpecificHealthProviderName == null) {
       log.warn("Unable to determine platform health provider for unknown cloud provider '{}'", getCloudProvider(stage));
-      return TaskResult.SUCCEEDED;
+      return new TaskResult(ExecutionStatus.SUCCEEDED);
     }
 
     try {
@@ -112,7 +112,7 @@ public class DetermineHealthProvidersTask implements RetryableTask, CloudProvide
 
       if (front50Service == null) {
         log.warn("Unable to determine health providers for an application without front50 enabled.");
-        return TaskResult.SUCCEEDED;
+        return new TaskResult(ExecutionStatus.SUCCEEDED);
       }
 
       Application application = front50Service.get(applicationName);
@@ -120,15 +120,15 @@ public class DetermineHealthProvidersTask implements RetryableTask, CloudProvide
       if (application.platformHealthOnly == Boolean.TRUE && application.platformHealthOnlyShowOverride != Boolean.TRUE) {
         // if `platformHealthOnlyShowOverride` is true, the expectation is that `interestingHealthProviderNames` will
         // be included in the request if it's desired ... and that it should NOT be automatically added.
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(Collections.singletonMap(
+        return new TaskResult(ExecutionStatus.SUCCEEDED, Collections.singletonMap(
           "interestingHealthProviderNames", Collections.singletonList(platformSpecificHealthProviderName)
-        )).build();
+        ));
       }
     } catch (Exception e) {
       log.error("Unable to determine platform health provider (executionId: {}, stageId: {})", stage.getExecution().getId(), stage.getId(), e);
     }
 
-    return TaskResult.SUCCEEDED;
+    return new TaskResult(ExecutionStatus.SUCCEEDED);
   }
 
   @Override

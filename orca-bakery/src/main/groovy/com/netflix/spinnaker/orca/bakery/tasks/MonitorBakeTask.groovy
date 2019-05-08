@@ -52,13 +52,13 @@ class MonitorBakeTask implements OverridableTimeoutRetryableTask {
       if (isCanceled(newStatus.state) && previousStatus.state == BakeStatus.State.PENDING) {
         log.info("Original bake was 'canceled', re-baking (executionId: ${stage.execution.id}, previousStatus: ${previousStatus.state})")
         def rebakeResult = createBakeTask.execute(stage)
-        return TaskResult.builder(ExecutionStatus.RUNNING).context(rebakeResult.context).outputs(rebakeResult.outputs).build()
+        return new TaskResult(ExecutionStatus.RUNNING, rebakeResult.context, rebakeResult.outputs)
       }
 
-      TaskResult.builder(mapStatus(newStatus)).context([status: newStatus]).build()
+      new TaskResult(mapStatus(newStatus), [status: newStatus])
     } catch (RetrofitError e) {
       if (e.response?.status == 404) {
-        return TaskResult.ofStatus(ExecutionStatus.RUNNING)
+        return new TaskResult(ExecutionStatus.RUNNING)
       }
       throw e
     }

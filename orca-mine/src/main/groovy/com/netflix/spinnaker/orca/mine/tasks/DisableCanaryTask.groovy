@@ -45,10 +45,10 @@ class DisableCanaryTask extends AbstractCloudProviderAwareTask implements Task {
       def canary = mineService.getCanary(stage.context.canary.id)
       if (canary.health?.health == 'UNHEALTHY' || stage.context.unhealthy != null) {
         // If unhealthy, already disabled in MonitorCanaryTask
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+        return new TaskResult(ExecutionStatus.SUCCEEDED, [
           waitTime  : waitTime,
           unhealthy : true
-        ]).build()
+        ])
       }
     } catch (RetrofitError e) {
       log.error("Exception occurred while getting canary status with id {} from mine, continuing with disable",
@@ -63,11 +63,11 @@ class DisableCanaryTask extends AbstractCloudProviderAwareTask implements Task {
     String cloudProvider = ops && !ops.empty ? ops.first()?.values().first()?.cloudProvider : getCloudProvider(stage) ?: 'aws'
     def taskId = katoService.requestOperations(cloudProvider, ops).toBlocking().first()
 
-    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context([
+    return new TaskResult(ExecutionStatus.SUCCEEDED, [
       'kato.last.task.id'    : taskId,
       'deploy.server.groups' : dSG,
       disabledCluster        : selector,
       waitTime               : waitTime
-    ]).build()
+    ])
   }
 }

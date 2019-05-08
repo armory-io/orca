@@ -65,7 +65,7 @@ abstract class AbstractFront50Task implements Task {
     TaskResult taskResult = performRequest(application)
     outputs << taskResult.outputs
 
-    return TaskResult.builder(taskResult.status).context(outputs).build()
+    return new TaskResult(taskResult.status, outputs)
   }
 
   Application fetchApplication(String applicationName) {

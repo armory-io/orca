@@ -71,7 +71,7 @@ class RedBlackStrategy implements Strategy, ApplicationContextAware {
     if (stageData?.maxRemainingAsgs && (stageData?.maxRemainingAsgs > 0)) {
       Map shrinkContext = baseContext + [
         shrinkToSize         : stageData.maxRemainingAsgs,
-        allowDeleteActive    : stageData.allowDeleteActive ?: false,
+        allowDeleteActive    : false,
         retainLargerOverNewer: false
       ]
       stages << newStage(
@@ -123,7 +123,7 @@ class RedBlackStrategy implements Strategy, ApplicationContextAware {
       }
 
       def scaleDown = baseContext + [
-        allowScaleDownActive         : stageData.allowScaleDownActive ?: false,
+        allowScaleDownActive         : false,
         remainingFullSizeServerGroups: 1,
         preferLargerOverNewer        : false
       ]

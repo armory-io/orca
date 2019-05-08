@@ -17,6 +17,8 @@
 package com.netflix.spinnaker.orca.igor.tasks
 
 import com.netflix.spinnaker.kork.core.RetrySupport
+
+import java.util.concurrent.TimeUnit
 import com.netflix.spinnaker.orca.ExecutionStatus
 import com.netflix.spinnaker.orca.OverridableTimeoutRetryableTask
 import com.netflix.spinnaker.orca.TaskResult
@@ -26,8 +28,6 @@ import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import retrofit.RetrofitError
-
-import java.util.concurrent.TimeUnit
 
 @Slf4j
 @Component
@@ -56,7 +56,7 @@ class MonitorJenkinsJobTask implements OverridableTimeoutRetryableTask {
 
     if (!stage.context.buildNumber) {
       log.error("failed to get build number for job ${job} from master ${master}")
-      return TaskResult.ofStatus(ExecutionStatus.TERMINAL)
+      return new TaskResult(ExecutionStatus.TERMINAL)
     }
 
     def buildNumber = (int) stage.context.buildNumber
@@ -65,24 +65,44 @@ class MonitorJenkinsJobTask implements OverridableTimeoutRetryableTask {
       Map outputs = [:]
       String result = build.result
       if ((build.building && build.building != 'false') || (build.running && build.running != 'false')) {
-        return TaskResult.builder(ExecutionStatus.RUNNING).context([buildInfo: build]).build()
+        return new TaskResult(ExecutionStatus.RUNNING, [buildInfo: build])
       }
 
       outputs.buildInfo = build
 
       if (statusMap.containsKey(result)) {
         ExecutionStatus status = statusMap[result]
+
+        if (stage.context.propertyFile) {
+          Map<String, Object> properties = [:]
+          try {
+            retrySupport.retry({
+              properties = buildService.getPropertyFile(buildNumber, stage.context.propertyFile, master, job)
+              if (properties.size() == 0 && result == 'SUCCESS') {
+                throw new IllegalStateException("Expected properties file ${stage.context.propertyFile} but it was either missing, empty or contained invalid syntax")
+              }
+            }, 6, 5000, false)
+          } catch (RetrofitError e) {
+            if (e.response?.status == 404) {
+              throw new IllegalStateException("Expected properties file " + stage.context.propertyFile + " but it was missing")
+            } else {
+              throw e
+            }
+          }
+          outputs << properties
+          outputs.propertyFileContents = properties
+        }
         if (result == 'UNSTABLE' && stage.context.markUnstableAsSuccessful) {
           status = ExecutionStatus.SUCCEEDED
         }
-        return TaskResult.builder(status).context(outputs).outputs(outputs).build()
+        return new TaskResult(status, outputs, outputs)
       } else {
-        return TaskResult.builder(ExecutionStatus.RUNNING).context([buildInfo: build]).build()
+        return new TaskResult(ExecutionStatus.RUNNING, [buildInfo: build])
       }
     } catch (RetrofitError e) {
       if ([503, 500, 404].contains(e.response?.status)) {
         log.warn("Http ${e.response.status} received from `igor`, retrying...")
-        return TaskResult.ofStatus(ExecutionStatus.RUNNING)
+        return new TaskResult(ExecutionStatus.RUNNING)
       }
 
       throw e

@@ -64,25 +64,25 @@ public class BulkWaitForDestroyedServerGroupTask extends AbstractCloudProviderAw
       );
 
       if (response.getStatus() != 200) {
-        return TaskResult.RUNNING;
+        return new TaskResult(ExecutionStatus.RUNNING);
       }
 
       Map cluster = objectMapper.readValue(response.getBody().in(), Map.class);
       Map<String, Object> output = new HashMap<>();
       output.put("remainingInstances", Collections.emptyList());
       if (cluster == null || cluster.get("serverGroups") == null) {
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(output).build();
+        return new TaskResult(ExecutionStatus.SUCCEEDED, output);
       }
 
       List<Map<String, Object>> serverGroups = getServerGroups(region, cluster, serverGroupNames);
       if (serverGroups.isEmpty()) {
-        return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(output).build();
+        return new TaskResult(ExecutionStatus.SUCCEEDED, output);
       }
 
       List<Map<String, Object>> instances = getInstances(serverGroups);
       LOGGER.info("{} not destroyed, found instances {}", serverGroupNames, instances);
       output.put("remainingInstances", instances);
-      return TaskResult.builder(ExecutionStatus.RUNNING).context(output).build();
+      return new TaskResult(ExecutionStatus.RUNNING, output);
     } catch (RetrofitError e) {
       return handleRetrofitError(stage, e);
     } catch (IOException e) {
@@ -96,12 +96,12 @@ public class BulkWaitForDestroyedServerGroupTask extends AbstractCloudProviderAw
     }
     switch (e.getResponse().getStatus()) {
       case 404:
-        return TaskResult.SUCCEEDED;
+        return new TaskResult(ExecutionStatus.SUCCEEDED);
       case 500:
         Map<String, Object> error = new HashMap<>();
         error.put("lastRetrofitException", new RetrofitExceptionHandler().handle(stage.getName(), e));
         LOGGER.error("Unexpected retrofit error {}", error.get("lastRetrofitException"), e);
-        return TaskResult.builder(ExecutionStatus.RUNNING).context(error).build();
+        return new TaskResult(ExecutionStatus.RUNNING, error);
       default:
         throw e;
     }

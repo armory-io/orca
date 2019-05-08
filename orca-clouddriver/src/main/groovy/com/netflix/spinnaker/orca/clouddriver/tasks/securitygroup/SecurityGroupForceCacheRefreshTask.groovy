@@ -42,6 +42,6 @@ public class SecurityGroupForceCacheRefreshTask extends AbstractCloudProviderAwa
       )
     }
 
-    TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
+    new TaskResult(ExecutionStatus.SUCCEEDED)
   }
 }

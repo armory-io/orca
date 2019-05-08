@@ -139,7 +139,7 @@ public class SpinnakerMetadataServerGroupTagGenerator implements ServerGroupEnti
     }, 10, 3000, false); // retry for up to 30 seconds
   }
 
-  public Map<String, Object> getPreviousServerGroupFromClusterByTarget(String application,
+  Map<String, Object> getPreviousServerGroupFromClusterByTarget(String application,
                                                                 String account,
                                                                 String cluster,
                                                                 String cloudProvider,
