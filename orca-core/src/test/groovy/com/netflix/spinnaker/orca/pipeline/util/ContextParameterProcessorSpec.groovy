@@ -22,17 +22,13 @@ import com.netflix.spinnaker.orca.pipeline.expressions.ExpressionEvaluationSumma
 import com.netflix.spinnaker.orca.pipeline.expressions.ExpressionTransform
 import com.netflix.spinnaker.orca.pipeline.expressions.ExpressionsSupport
 import com.netflix.spinnaker.orca.pipeline.expressions.SpelHelperFunctionException
-import com.netflix.spinnaker.orca.pipeline.model.DefaultTrigger
-import com.netflix.spinnaker.orca.pipeline.model.Execution
-import com.netflix.spinnaker.orca.pipeline.model.JenkinsTrigger
+import com.netflix.spinnaker.orca.pipeline.model.*
 import org.springframework.expression.spel.SpelEvaluationException
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
 import static com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED
-import static com.netflix.spinnaker.orca.pipeline.model.JenkinsTrigger.BuildInfo
-import static com.netflix.spinnaker.orca.pipeline.model.JenkinsTrigger.SourceControl
 import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.pipeline
 import static com.netflix.spinnaker.orca.test.model.ExecutionBuilder.stage
 
@@ -306,7 +302,7 @@ class ContextParameterProcessorSpec extends Specification {
   @Unroll
   def "correctly compute scmInfo attribute"() {
     given:
-    context.trigger.buildInfo = new BuildInfo("name", 1, "http://jenkins", [], scm, false, "SUCCESS")
+    context.trigger.buildInfo = new JenkinsBuildInfo("name", 1, "http://jenkins", "SUCCESS", [], scm)
 
     def source = ['branch': '${scmInfo.branch}']
 
@@ -547,6 +543,7 @@ class ContextParameterProcessorSpec extends Specification {
     result.deployed.serverGroup == ["flex-test-v043", "flex-prestaging-v011"]
     result.deployed.region == ["us-east-1", "us-west-1"]
     result.deployed.ami == ["ami-06362b6e", "ami-f759b7b3"]
+    result.deployed.deployments == [ [[ "serverGroupName": "flex-test-v043" ]], [] ]
 
     when: 'specifying a stage name'
     source = ['deployed': '${#deployedServerGroups("Deploy in us-east-1")}']
@@ -557,7 +554,7 @@ class ContextParameterProcessorSpec extends Specification {
     result.deployed.serverGroup == ["flex-test-v043"]
     result.deployed.region == ["us-east-1"]
     result.deployed.ami == ["ami-06362b6e"]
-
+    result.deployed.deployments == [ [[ "serverGroupName": "flex-test-v043" ]] ]
 
     where:
     execution = pipeline {
@@ -628,6 +625,19 @@ class ContextParameterProcessorSpec extends Specification {
             "suspendedProcesses": [],
             "terminationPolicies": [
               "Default"
+            ],
+            "kato.tasks": [
+              [
+                "resultObjects": [
+                  [
+                    "deployments": [
+                      [
+                        "serverGroupName": "flex-test-v043"
+                      ]
+                    ]
+                  ]
+                ]
+              ]
             ]
           )
         }

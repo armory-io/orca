@@ -22,6 +22,7 @@ import com.netflix.spinnaker.orca.clouddriver.tasks.image.ImageTagger
 import com.netflix.spinnaker.orca.clouddriver.tasks.image.ImageTaggerSpec
 import com.netflix.spinnaker.orca.pipeline.model.Execution
 import com.netflix.spinnaker.orca.pipeline.model.Stage
+import com.netflix.spinnaker.orca.test.model.ExecutionBuilder
 import spock.lang.Unroll
 
 class AmazonImageTaggerSpec extends ImageTaggerSpec<AmazonImageTagger> {
@@ -54,7 +55,16 @@ class AmazonImageTaggerSpec extends ImageTaggerSpec<AmazonImageTagger> {
     pipeline.stages << stage1 << stage2
 
     and:
-    oortService.findImage("aws", "my-ami", null, null, null) >> { [] }
+    if (foundById) {
+      1 * oortService.findImage("aws", "ami-id", null, null, null) >> {
+        [["imageName": "ami-name"]]
+      }
+      1 * oortService.findImage("aws", "ami-name", null, null, null) >> { [] }
+    } else if (imageId != null) {
+      1 * oortService.findImage("aws", imageId, null, null, null) >> { [] }
+    } else {
+      1 * oortService.findImage("aws", imageName, null, null, null) >> { [] }
+    }
 
     when:
     imageTagger.getOperationContext(stage2)
@@ -64,9 +74,92 @@ class AmazonImageTaggerSpec extends ImageTaggerSpec<AmazonImageTagger> {
     e.shouldRetry == shouldRetry
 
     where:
-    imageId  | imageName || shouldRetry
-    "my-ami" | null      || true
-    null     | "my-ami"  || false       // do not retry if an explicitly provided image does not exist (user error)
+    imageId  | imageName  || foundById || shouldRetry
+    "ami-id" | null       || false     || true
+    "ami-id" | null       || true      || true
+    null     | "ami-name" || false     || false  // do not retry if an explicitly provided image does not exist (user error)
+  }
+
+  def "retries when namedImage data is missing an upstream imageId"() {
+    given:
+    def name = "spinapp-1.0.0-ebs"
+    def pipeline = ExecutionBuilder.pipeline {}
+    def stage1 = new Stage(
+      pipeline,
+      "bake",
+      [
+        cloudProvider: "aws",
+        imageId      : "ami-1",
+        imageName    : name,
+        region       : "us-east-1"
+      ]
+    )
+
+    def stage2 = new Stage(
+      pipeline,
+      "bake",
+      [
+        cloudProvider: "aws",
+        imageId      : "ami-2",
+        imageName    : name,
+        region       : "us-west-1"
+      ]
+    )
+
+    def stage3 = new Stage(pipeline, "upsertImageTags", [imageName: name, cloudProvider: "aws"])
+
+    stage1.refId = stage1.id
+    stage2.refId = stage2.id
+    stage3.requisiteStageRefIds = [stage1.refId, stage2.refId]
+
+    pipeline.stages << stage1 << stage2 << stage3
+
+    when:
+    1 * oortService.findImage("aws", "ami-1", _, _, _) >> {
+      [[imageName: name]]
+    }
+
+    1 * oortService.findImage("aws", "ami-2", _, _, _) >> {
+      [[imageName: name]]
+    }
+
+    1 * oortService.findImage("aws", name, _, _, _) >> {
+      [[
+         imageName: name,
+         amis     : ["us-east-1": ["ami-1"]]
+       ]]
+    }
+
+    imageTagger.getOperationContext(stage3)
+
+    then:
+    ImageTagger.ImageNotFound e = thrown(ImageTagger.ImageNotFound)
+    e.shouldRetry == true
+
+    when:
+    1 * oortService.findImage("aws", "ami-1", _, _, _) >> {
+      [[imageName: name]]
+    }
+
+    1 * oortService.findImage("aws", "ami-2", _, _, _) >> {
+      [[imageName: name]]
+    }
+
+    1 * oortService.findImage("aws", name, _, _, _) >> {
+      [[
+         imageName: name,
+         amis     : [
+           "us-east-1": ["ami-1"],
+           "us-west-1": ["ami-2"]
+         ],
+         accounts : ["compute"]
+       ]]
+    }
+
+    imageTagger.getOperationContext(stage3)
+
+    then:
+    noExceptionThrown()
   }
 
   def "should build upsertMachineImageTags and allowLaunchDescription operations"() {
@@ -114,7 +207,7 @@ class AmazonImageTaggerSpec extends ImageTaggerSpec<AmazonImageTagger> {
     def stage = new Stage(Execution.newOrchestration("orca"), "", [
       imageNames: ["my-ami-1", "my-ami-2"],
       tags      : [
-        "tag1"      : "value1"
+        "tag1": "value1"
       ]
     ])
 

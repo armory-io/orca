@@ -16,7 +16,10 @@
 
 package com.netflix.spinnaker.orca.q.handler
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.netflix.spinnaker.orca.exceptions.ExceptionHandler
+import com.netflix.spinnaker.orca.jackson.OrcaObjectMapper
 import com.netflix.spinnaker.orca.pipeline.expressions.ExpressionEvaluationSummary
 import com.netflix.spinnaker.orca.pipeline.expressions.PipelineExpressionEvaluator
 import com.netflix.spinnaker.orca.pipeline.model.Execution
@@ -33,6 +36,11 @@ import org.slf4j.LoggerFactory
 interface ExpressionAware {
 
   val contextParameterProcessor: ContextParameterProcessor
+
+  companion object {
+    val mapper: ObjectMapper = OrcaObjectMapper.newInstance()
+  }
+
   val log: Logger
     get() = LoggerFactory.getLogger(javaClass)
 
@@ -69,12 +77,19 @@ interface ExpressionAware {
     // context. Otherwise, it's very confusing in the UI because the value is clearly correctly evaluated but
     // the error is still shown
     if (hasFailedExpressions()) {
-      val failedExpressions = this.context[PipelineExpressionEvaluator.SUMMARY] as MutableMap<String, *>
+      try {
+        val failedExpressions = this.context[PipelineExpressionEvaluator.SUMMARY] as MutableMap<String, *>
 
-      failedExpressions.keys.forEach { expressionKey ->
-        if (evalSummary.wasAttempted(expressionKey) && !evalSummary.hasFailed(expressionKey)) {
+        val keysToRemove: List<String> = failedExpressions.keys.filter { expressionKey ->
+          (evalSummary.wasAttempted(expressionKey) && !evalSummary.hasFailed(expressionKey))
+        }.toList()
+
+        keysToRemove.forEach { expressionKey ->
           failedExpressions.remove(expressionKey)
         }
+      } catch (e: Exception) {
+        // Best effort clean up, if if fails just log the error and leave the context be
+        log.error("Failed to remove stale expression errors", e)
       }
     }
 
@@ -121,9 +136,13 @@ interface ExpressionAware {
     )
     )
 
+  // TODO (mvulfson): Ideally, we opt out of this method and use ContextParameterProcessor.buildExecutionContext
+  // but that doesn't generate StageContext preventing us from doing recursive lookups... An investigation for another day
   private fun StageContext.augmentContext(execution: Execution): StageContext =
     if (execution.type == PIPELINE) {
-      this + mapOf("trigger" to execution.trigger, "execution" to execution)
+      this + mapOf(
+        "trigger" to mapper.convertValue<Map<String, Any>>(execution.trigger),
+        "execution" to execution)
     } else {
       this
     }

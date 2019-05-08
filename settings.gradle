@@ -46,7 +46,9 @@ include "orca-extensionpoint",
   "orca-qos",
   "orca-migration",
   "orca-sql",
-  "orca-sql-mysql"
+  "orca-sql-mysql",
+  "orca-integrations-gremlin",
+  "orca-integrations-cloudfoundry"
 
 rootProject.name = "orca"
 

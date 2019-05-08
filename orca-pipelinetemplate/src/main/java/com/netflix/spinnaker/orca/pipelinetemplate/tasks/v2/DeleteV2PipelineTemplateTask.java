@@ -47,16 +47,16 @@ public class DeleteV2PipelineTemplateTask implements RetryableTask {
     }
 
     String templateId = (String) stage.getContext().get("pipelineTemplateId");
-    String version = (String) stage.getContext().get("version");
+    String tag = (String) stage.getContext().get("tag");
     String digest = (String) stage.getContext().get("digest");
 
-    Response _ = front50Service.deleteV2PipelineTemplate(templateId, version, digest);
+    Response _ = front50Service.deleteV2PipelineTemplate(templateId, tag, digest);
 
     Map<String, Object> outputs = new HashMap<>();
     outputs.put("notification.type", "deletepipelinetemplate");
     outputs.put("pipeline.id", templateId);
 
-    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs);
+    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).build();
   }
 
   @Override

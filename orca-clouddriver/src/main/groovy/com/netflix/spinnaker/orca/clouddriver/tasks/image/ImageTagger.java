@@ -63,11 +63,13 @@ public abstract class ImageTagger {
   }
 
   protected Collection findImages(Collection<String> imageNames, Collection<String> consideredStageRefIds, Stage stage, Class matchedImageType) {
+    List<String> upstreamImageIds = new ArrayList<>();
+
     if (imageNames == null || imageNames.isEmpty()) {
       imageNames = new HashSet<>();
 
       // attempt to find upstream images in the event that one was not explicitly provided
-      Collection<String> upstreamImageIds = upstreamImageIds(stage, consideredStageRefIds, getCloudProvider());
+      upstreamImageIds.addAll(upstreamImageIds(stage, consideredStageRefIds, getCloudProvider()));
       if (upstreamImageIds.isEmpty()) {
         throw new IllegalStateException("Unable to determine source image(s)");
       }
@@ -93,10 +95,14 @@ public abstract class ImageTagger {
       Map matchedImage = allMatchedImages.stream()
         .filter(image -> image.get("imageName").equals(targetImageName))
         .findFirst()
-        .orElseThrow(() -> new ImageNotFound(format("No image found (imageName: %s)", targetImageName), false));
+        .orElseThrow(() ->
+          new ImageNotFound(format("No image found (imageName: %s)", targetImageName), !upstreamImageIds.isEmpty())
+        );
 
       foundImages.add(objectMapper.convertValue(matchedImage, matchedImageType));
     }
+
+    foundAllImages(upstreamImageIds, foundImages);
 
     return foundImages;
   }
@@ -128,6 +134,22 @@ public abstract class ImageTagger {
       this.operations = operations;
       this.extraOutput = extraOutput;
     }
+  }
+
+  /**
+   * This method is a helper for AmazonImageTagger; Amazon images are regional with a one-to-many relationship
+   * between image names (treated globally) and regional image ids. Clouddriver caches Amazon images and
+   * namedImages as distinct and eventually consistent collections but findImages() uses the output of a lookup
+   * by names to determine which imageIds to tag. If upstream images were baked in n regions for "myapp-1.0.0" but
+   * findImage("aws", "myapp-1.0.0") returns n-1 amis as the namedImages collection for an account/region
+   * is mid-update, UpsertImageTags would appear successful despite only applying tags to a subset of upstream images.
+   *
+   * @param upstreamImageIds list of upstream image ids
+   * @param foundImages collection of cloudprovider specific MatchedImage objects
+   *
+   * Throws ImageNotFound with shouldRetry=true in AmazonImageTagger.foundAllImages
+   */
+  protected void foundAllImages(List<String> upstreamImageIds, Collection<?> foundImages) {
   }
 
   protected static class Image {

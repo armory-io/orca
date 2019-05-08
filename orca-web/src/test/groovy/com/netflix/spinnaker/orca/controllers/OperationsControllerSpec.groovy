@@ -21,6 +21,7 @@ import com.netflix.spinnaker.fiat.model.resources.Account
 import com.netflix.spinnaker.fiat.model.resources.Role
 import com.netflix.spinnaker.fiat.shared.FiatService
 import com.netflix.spinnaker.fiat.shared.FiatStatus
+
 import com.netflix.spinnaker.orca.front50.Front50Service
 
 import javax.servlet.http.HttpServletResponse
@@ -178,7 +179,7 @@ class OperationsControllerSpec extends Specification {
       trigger    : [
         type            : "manual",
         parentPipelineId: "12345",
-        parentExecution : [name: "abc"]
+        parentExecution : [name: "abc", type: PIPELINE, id: "1", application: "application"]
       ]
     ]
   }
@@ -263,7 +264,7 @@ class OperationsControllerSpec extends Specification {
     buildService.getBuild(buildNumber, master, job) >> buildInfo
 
     if (queryUser) {
-      MDC.put(AuthenticatedRequest.SPINNAKER_USER, queryUser)
+      MDC.put(AuthenticatedRequest.Header.USER.header, queryUser)
     }
     when:
     controller.orchestrate(requestedPipeline, Mock(HttpServletResponse))
@@ -481,7 +482,7 @@ class OperationsControllerSpec extends Specification {
       startedPipeline
     }
     executionRepository.retrievePipelinesForPipelineConfigId(*_) >> Observable.empty()
-    ArtifactResolver realArtifactResolver = new ArtifactResolver(mapper, executionRepository)
+    ArtifactResolver realArtifactResolver = new ArtifactResolver(mapper, executionRepository, new ContextParameterProcessor())
 
     // can't use @subject, since we need to test the behavior of otherwise mocked-out 'artifactResolver'
     def tempController = new OperationsController(
@@ -492,7 +493,7 @@ class OperationsControllerSpec extends Specification {
         executionLauncher: executionLauncher,
         contextParameterProcessor: new ContextParameterProcessor(),
         webhookService: webhookService,
-        artifactResolver: realArtifactResolver
+        artifactResolver: realArtifactResolver,
     )
 
     def reference = 'gs://bucket'
@@ -714,6 +715,27 @@ class OperationsControllerSpec extends Specification {
       [label: "Webhook #1", description: "Description #1", type: "webhook_1", waitForCompletion: true, preconfiguredProperties: preconfiguredProperties, noUserConfigurableFields: true, parameters: null, parameterData: null],
       [label: "Webhook #2", description: "Description #2", type: "webhook_2", waitForCompletion: true, preconfiguredProperties: preconfiguredProperties, noUserConfigurableFields: true, parameters: null, parameterData: null]
     ]
+  }
+
+  def "should return unrestricted preconfigured webhooks if fiat is unavailable"() {
+    given:
+    UserPermission userPermission = new UserPermission()
+    userPermission.addResource(new Role("test"))
+
+    when:
+    def preconfiguredWebhooks = controller.preconfiguredWebhooks()
+
+    then:
+    1 * fiatService.getUserPermission(*_) >> {
+      throw new IllegalStateException("Sorry, Fiat is unavailable")
+    }
+    1 * controller.fiatStatus.isEnabled() >> { return true }
+    1 * webhookService.preconfiguredWebhooks >> [
+        createPreconfiguredWebhook("Webhook #1", "Description #1", "webhook_1", [:]),
+        createPreconfiguredWebhook("Webhook #2", "Description #2", "webhook_2", ["READ": ["some-role"], "WRITE": ["some-role"]]),
+        createPreconfiguredWebhook("Webhook #3", "Description #3", "webhook_3", ["READ": ["anonymous"], "WRITE": ["anonymous"]])
+    ]
+    preconfiguredWebhooks*.label == ["Webhook #1", "Webhook #3"]
   }
 
   def "should start pipeline by config id with provided trigger"() {

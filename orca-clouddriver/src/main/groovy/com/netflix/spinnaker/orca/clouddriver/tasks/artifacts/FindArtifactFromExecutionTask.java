@@ -62,24 +62,29 @@ public class FindArtifactFromExecutionTask implements Task {
 
     if (match == null) {
       outputs.put("exception", "No artifact matching " + expectedArtifact + " found among " + priorArtifacts);
-      return new TaskResult(ExecutionStatus.TERMINAL, new HashMap<>(), outputs);
+      return TaskResult.builder(ExecutionStatus.TERMINAL).context(new HashMap<>()).outputs(outputs).build();
     }
 
     outputs.put("resolvedExpectedArtifacts", Collections.singletonList(expectedArtifact));
     outputs.put("artifacts", Collections.singletonList(match));
 
-    return new TaskResult(ExecutionStatus.SUCCEEDED, outputs, outputs);
+    return TaskResult.builder(ExecutionStatus.SUCCEEDED).context(outputs).outputs(outputs).build();
   }
 
   @Data
   private static class ExecutionOptions {
+    // Accept either 'succeeded' or 'successful' in the stage config. The front-end sets 'successful', but due to a bug
+    // this class was only looking for 'succeeded'. Fix this by accepting 'successful' but to avoid breaking anyone who
+    // discovered this bug and manually edited their stage to set 'succeeded', continue to accept 'succeeded'.
     boolean succeeded;
+    boolean successful;
+
     boolean terminal;
     boolean running;
 
     ExecutionCriteria toCriteria() {
       List<String> statuses = new ArrayList<>();
-      if (succeeded) {
+      if (succeeded || successful) {
         statuses.add("SUCCEEDED");
       }
 

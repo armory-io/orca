@@ -44,7 +44,6 @@ import org.jetbrains.spek.api.dsl.on
 import org.jetbrains.spek.api.lifecycle.CachingMode.GROUP
 import org.jetbrains.spek.subject.SubjectSpek
 import org.threeten.extra.Minutes
-import java.lang.RuntimeException
 import java.time.Duration
 import kotlin.reflect.jvm.jvmName
 
@@ -90,7 +89,7 @@ object RunTaskHandlerTest : SubjectSpek<RunTaskHandler>({
       val message = RunTask(pipeline.type, pipeline.id, "foo", pipeline.stages.first().id, "1", DummyTask::class.java)
 
       and("has no context updates outputs") {
-        val taskResult = TaskResult(SUCCEEDED)
+        val taskResult = TaskResult.SUCCEEDED
 
         beforeGroup {
           whenever(task.execute(any())) doReturn taskResult
@@ -120,7 +119,7 @@ object RunTaskHandlerTest : SubjectSpek<RunTaskHandler>({
 
       and("has context updates") {
         val stageOutputs = mapOf("foo" to "covfefe")
-        val taskResult = TaskResult(SUCCEEDED, stageOutputs, emptyMap<String, Any>())
+        val taskResult = TaskResult.builder(SUCCEEDED).context(stageOutputs).build()
 
         beforeGroup {
           whenever(task.execute(any())) doReturn taskResult
@@ -142,7 +141,7 @@ object RunTaskHandlerTest : SubjectSpek<RunTaskHandler>({
 
       and("has outputs") {
         val outputs = mapOf("foo" to "covfefe")
-        val taskResult = TaskResult(SUCCEEDED, emptyMap<String, Any>(), outputs)
+        val taskResult = TaskResult.builder(SUCCEEDED).outputs(outputs).build()
 
         beforeGroup {
           whenever(task.execute(any())) doReturn taskResult
@@ -167,7 +166,7 @@ object RunTaskHandlerTest : SubjectSpek<RunTaskHandler>({
           "foo" to "covfefe",
           "stageTimeoutMs" to Long.MAX_VALUE
         )
-        val taskResult = TaskResult(SUCCEEDED, emptyMap<String, Any>(), outputs)
+        val taskResult = TaskResult.builder(SUCCEEDED).outputs(outputs).build()
 
         beforeGroup {
           whenever(task.execute(any())) doReturn taskResult
@@ -202,7 +201,7 @@ object RunTaskHandlerTest : SubjectSpek<RunTaskHandler>({
         }
       }
       val message = RunTask(pipeline.type, pipeline.id, "foo", pipeline.stages.first().id, "1", DummyTask::class.java)
-      val taskResult = TaskResult(RUNNING)
+      val taskResult = TaskResult.RUNNING
       val taskBackoffMs = 30_000L
 
       beforeGroup {
@@ -235,7 +234,7 @@ object RunTaskHandlerTest : SubjectSpek<RunTaskHandler>({
           }
         }
         val message = RunTask(pipeline.type, pipeline.id, "foo", pipeline.stages.first().id, "1", DummyTask::class.java)
-        val taskResult = TaskResult(taskStatus)
+        val taskResult = TaskResult.ofStatus(taskStatus)
 
         and("no overrides are in place") {
           beforeGroup {
@@ -1119,6 +1118,47 @@ object RunTaskHandlerTest : SubjectSpek<RunTaskHandler>({
           verify(task).execute(check {
             assertThat(it.context["expr"]).isEqualTo(expected)
           })
+        }
+      }
+    }
+
+    describe("can reference non-existent trigger props") {
+      mapOf(
+        "\${trigger.type == 'manual'}" to true,
+        "\${trigger.buildNumber == null}" to true,
+        "\${trigger.quax ?: 'no quax'}" to "no quax"
+      ).forEach { expression, expected ->
+        given("an expression $expression in the stage context") {
+          val pipeline = pipeline {
+            stage {
+              refId = "1"
+              type = "whatever"
+              context["expr"] = expression
+              trigger = DefaultTrigger ("manual")
+              task {
+                id = "1"
+                startTime = clock.instant().toEpochMilli()
+              }
+            }
+          }
+          val message = RunTask(pipeline.type, pipeline.id, "foo", pipeline.stageByRef("1").id, "1", DummyTask::class.java)
+
+          beforeGroup {
+            whenever(task.execute(any())) doReturn TaskResult.SUCCEEDED
+            whenever(repository.retrieve(PIPELINE, message.executionId)) doReturn pipeline
+          }
+
+          afterGroup(::resetMocks)
+
+          action("the handler receives a message") {
+            subject.handle(message)
+          }
+
+          it("evaluates the expression") {
+            verify(task).execute(check {
+              assertThat(it.context["expr"]).isEqualTo(expected)
+            })
+          }
         }
       }
     }
