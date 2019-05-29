@@ -52,7 +52,7 @@ public class lambdaFunctionTask extends AbstractCloudProviderAwareTask implement
     Map<String, Object> task = new HashMap<>(stage.getContext());
 
     String operationName = (String) task.get("operation");
-    if (!StringUtils.isNotBlank(operationName)) {
+    if (StringUtils.isBlank(operationName)) {
       throw new IllegalArgumentException(
           "Field 'operation' is missing and must be present in stage context");
     }
