@@ -38,7 +38,7 @@ import org.springframework.stereotype.Component;
   essentially just passes an arbitrary operation over to Clouddriver.
 */
 @Component
-public class lambdaFunctionTask extends AbstractCloudProviderAwareTask implements Task {
+public class LambdaFunctionTask extends AbstractCloudProviderAwareTask implements Task {
 
   @Autowired KatoService katoService;
 
