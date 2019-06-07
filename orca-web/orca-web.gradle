@@ -56,6 +56,7 @@ dependencies {
   implementation(project(":orca-sql-mysql"))
   implementation(project(":orca-integrations-cloudfoundry"))
   implementation(project(":orca-integrations-gremlin"))
+  implementation(project(":orca-api"))
   implementation("com.netflix.spinnaker.kork:kork-exceptions")
   implementation("com.netflix.spinnaker.kork:kork-stackdriver")
   implementation("com.netflix.spinnaker.kork:kork-web")
