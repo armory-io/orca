@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-// apply from: "$rootDir/gradle/spock.gradle"
-
 dependencies {
+  api("de.huxhorn.sulky:de.huxhorn.sulky.ulid")
+  api("com.netflix.spinnaker.kork:kork-artifacts")
+  api("com.netflix.spinnaker.kork:kork-security")
+  api("com.netflix.spinnaker.kork:kork-exceptions")
+
   implementation(project(":orca-core"))
   implementation("org.slf4j:slf4j-api")
+  implementation("com.netflix.spectator:spectator-api")
+  implementation("com.netflix.spinnaker.kork:kork-core")
+  implementation("net.logstash.logback:logstash-logback-encoder")
+  implementation("org.springframework.security:spring-security-web")
+  implementation("org.apache.commons:commons-lang3")
 
   compileOnly("org.projectlombok:lombok")
   annotationProcessor("org.projectlombok:lombok")
