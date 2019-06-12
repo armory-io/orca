@@ -1,5 +1,3 @@
 package com.netflix.spinnaker.orca.pipeline;
 
-public interface PluginStageDefintionBuilder  {
-
-}
+public interface PluginStageDefintionBuilder {}
