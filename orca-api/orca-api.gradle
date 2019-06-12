@@ -14,5 +14,37 @@
  * limitations under the License.
  */
 
+apply from: "$rootDir/gradle/kotlin.gradle"
+apply from: "$rootDir/gradle/spock.gradle"
+
+test {
+  useJUnitPlatform {
+    includeEngines "junit-vintage", "junit-jupiter"
+  }
+}
+
+
 dependencies {
+  api("de.huxhorn.sulky:de.huxhorn.sulky.ulid")
+  api("com.netflix.spinnaker.kork:kork-artifacts")
+  api("com.netflix.spinnaker.kork:kork-security")
+  implementation("com.fasterxml.jackson.core:jackson-annotations")
+  implementation("com.fasterxml.jackson.core:jackson-core")
+  implementation("com.fasterxml.jackson.core:jackson-databind")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-guava")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+  compileOnly("org.projectlombok:lombok")
+  annotationProcessor("org.projectlombok:lombok")
+
+  testImplementation(project(":orca-test"))
+  testImplementation(project(":orca-test-groovy"))
+  testImplementation("org.junit.jupiter:junit-jupiter-api")
+  testImplementation("org.assertj:assertj-core")
+
+  testRuntimeOnly("org.slf4j:slf4j-simple")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-api")
+  testRuntimeOnly "org.junit.vintage:junit-vintage-engine"
 }

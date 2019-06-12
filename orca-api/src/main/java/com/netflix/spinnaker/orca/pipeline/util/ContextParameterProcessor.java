@@ -54,7 +54,7 @@ public class ContextParameterProcessor {
             Arrays.asList(
                 new DeployedServerGroupsExpressionFunctionProvider(),
                 new ManifestLabelValueExpressionFunctionProvider()),
-            V2));
+            ExpressionEvaluationVersion.V2));
   }
 
   public ContextParameterProcessor(ContextFunctionConfiguration contextFunctionConfiguration) {
