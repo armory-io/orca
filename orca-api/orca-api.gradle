@@ -36,6 +36,7 @@ dependencies {
   implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("org.springframework.security:spring-security-web")
+  implementation("com.jayway.jsonpath:json-path:2.2.0")
 
   compileOnly("org.projectlombok:lombok")
   annotationProcessor("org.projectlombok:lombok")
