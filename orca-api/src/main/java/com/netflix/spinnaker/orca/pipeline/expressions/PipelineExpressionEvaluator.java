@@ -48,7 +48,9 @@ public class PipelineExpressionEvaluator extends ExpressionsSupport implements E
     StandardEvaluationContext evaluationContext =
         ExpressionsSupport.newEvaluationContext(rootObject, allowUnknownKeys);
     return new ExpressionTransform(
-            contextFunctionConfiguration.getExpressionFunctionProviders(), ExpressionsSupport.parserContext, parser)
+            contextFunctionConfiguration.getExpressionFunctionProviders(),
+            ExpressionsSupport.parserContext,
+            parser)
         .transformMap(source, evaluationContext, summary);
   }
 }
