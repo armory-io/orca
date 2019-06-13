@@ -16,6 +16,7 @@
 
 package com.netflix.spinnaker.orca.pipeline.util;
 
+import static com.netflix.spinnaker.orca.pipeline.expressions.PipelineExpressionEvaluator.ExpressionEvaluationVersion.V2;
 import static com.netflix.spinnaker.orca.pipeline.model.Execution.ExecutionType.PIPELINE;
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.Collections.emptyList;
@@ -53,7 +54,7 @@ public class ContextParameterProcessor {
             Arrays.asList(
                 new DeployedServerGroupsExpressionFunctionProvider(),
                 new ManifestLabelValueExpressionFunctionProvider()),
-            ExpressionEvaluationVersion.V2));
+            V2));
   }
 
   public ContextParameterProcessor(ContextFunctionConfiguration contextFunctionConfiguration) {
