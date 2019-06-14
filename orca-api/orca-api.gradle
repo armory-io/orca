@@ -38,6 +38,7 @@ dependencies {
   implementation("org.springframework.security:spring-security-web")
   implementation("com.jayway.jsonpath:json-path:2.2.0")
   implementation("javax.servlet:javax.servlet-api:4.0.1")
+  implementation("org.yaml:snakeyaml")
 
   compileOnly("org.projectlombok:lombok")
   annotationProcessor("org.projectlombok:lombok")
