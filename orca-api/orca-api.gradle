@@ -24,6 +24,5 @@ test {
 }
 
 dependencies {
-  api("de.huxhorn.sulky:de.huxhorn.sulky.ulid")
   implementation("com.google.guava:guava")
 }
