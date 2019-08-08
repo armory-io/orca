@@ -18,10 +18,12 @@ package com.netflix.spinnaker.orca;
 
 import static java.lang.String.format;
 
+import com.netflix.spinnaker.orca.api.Stage;
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 
 /**
@@ -32,7 +34,8 @@ import javax.annotation.Nonnull;
 public class StageResolver {
   private final Map<String, StageDefinitionBuilder> stageDefinitionBuilderByAlias = new HashMap<>();
 
-  public StageResolver(Collection<StageDefinitionBuilder> stageDefinitionBuilders) {
+  public StageResolver(
+      Collection<StageDefinitionBuilder> stageDefinitionBuilders, Collection<Stage> apiStages) {
     for (StageDefinitionBuilder stageDefinitionBuilder : stageDefinitionBuilders) {
       stageDefinitionBuilderByAlias.put(stageDefinitionBuilder.getType(), stageDefinitionBuilder);
       for (String alias : stageDefinitionBuilder.aliases()) {
@@ -46,6 +49,13 @@ public class StageResolver {
         }
 
         stageDefinitionBuilderByAlias.put(alias, stageDefinitionBuilder);
+      }
+    }
+
+    if (!Objects.equals(apiStages, null)) {
+      for (Stage stage : apiStages) {
+        // TODO if the scaffolding makes sense this is where Stage will be converted to
+        // StageDefinitionBuilder
       }
     }
   }
