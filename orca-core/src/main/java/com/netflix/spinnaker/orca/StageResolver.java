@@ -19,6 +19,7 @@ package com.netflix.spinnaker.orca;
 import static java.lang.String.format;
 
 import com.netflix.spinnaker.orca.api.Stage;
+import com.netflix.spinnaker.orca.pipeline.ApiStageDefinitionBuilder;
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,8 +55,8 @@ public class StageResolver {
 
     if (!Objects.equals(apiStages, null)) {
       for (Stage stage : apiStages) {
-        // TODO if the scaffolding makes sense this is where Stage will be converted to
-        // StageDefinitionBuilder
+        ApiStageDefinitionBuilder builder = new ApiStageDefinitionBuilder(stage);
+        stageDefinitionBuilderByAlias.put(stage.getName(), builder);
       }
     }
   }
