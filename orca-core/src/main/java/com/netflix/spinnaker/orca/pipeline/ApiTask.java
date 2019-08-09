@@ -24,6 +24,7 @@ import com.netflix.spinnaker.orca.api.StageInput;
 import com.netflix.spinnaker.orca.api.StageOutput;
 import com.netflix.spinnaker.orca.jackson.OrcaObjectMapper;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
+import java.lang.reflect.Method;
 import javax.annotation.Nonnull;
 import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
@@ -41,32 +42,39 @@ public class ApiTask implements Task {
     ObjectMapper objectMapper = OrcaObjectMapper.newInstance();
 
     TaskResult result;
-    ResolvableType resolvedType = ResolvableType.forClass(apiStage.getClass());
-    resolvedType.resolve();
+    try {
+      Method method = apiStage.getClass().getMethod("execute");
+      ResolvableType resolvedType = ResolvableType.forMethodParameter(method, 1);
+      resolvedType.resolve();
 
-    ResolvableType inputType = resolvedType.getGeneric(0);
+      ResolvableType inputType = resolvedType.getGeneric(0);
 
-    StageInput stageInput =
-        new StageInput(objectMapper.convertValue(stage.getContext(), inputType.getRawClass()));
-    StageOutput outputs = apiStage.execute(stageInput);
-    switch (outputs.getStatus()) {
-      case TERMINAL:
-        result = TaskResult.ofStatus(ExecutionStatus.TERMINAL);
-        break;
-      case RUNNING:
-        result = TaskResult.ofStatus(ExecutionStatus.RUNNING);
-        break;
-      case COMPLETED:
-        result = TaskResult.ofStatus(ExecutionStatus.SUCCEEDED);
-        break;
-      case NOT_STARTED:
-        result = TaskResult.ofStatus(ExecutionStatus.NOT_STARTED);
-        break;
-      default:
-        result = TaskResult.ofStatus(ExecutionStatus.FAILED_CONTINUE);
-        break;
+      StageInput stageInput =
+          new StageInput(objectMapper.convertValue(stage.getContext(), inputType.getRawClass()));
+      StageOutput outputs = apiStage.execute(stageInput);
+      switch (outputs.getStatus()) {
+        case TERMINAL:
+          result = TaskResult.ofStatus(ExecutionStatus.TERMINAL);
+          break;
+        case RUNNING:
+          result = TaskResult.ofStatus(ExecutionStatus.RUNNING);
+          break;
+        case COMPLETED:
+          result = TaskResult.ofStatus(ExecutionStatus.SUCCEEDED);
+          break;
+        case NOT_STARTED:
+          result = TaskResult.ofStatus(ExecutionStatus.NOT_STARTED);
+          break;
+        default:
+          result = TaskResult.ofStatus(ExecutionStatus.FAILED_CONTINUE);
+          break;
+      }
+
+      return result;
+    } catch (Exception e) {
+      // TODO properly handle exeception
     }
 
-    return result;
+    return null;
   }
 }
