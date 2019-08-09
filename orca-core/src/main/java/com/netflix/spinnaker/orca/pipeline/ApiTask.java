@@ -16,13 +16,16 @@
 
 package com.netflix.spinnaker.orca.pipeline;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.Task;
 import com.netflix.spinnaker.orca.TaskResult;
 import com.netflix.spinnaker.orca.api.StageInput;
 import com.netflix.spinnaker.orca.api.StageOutput;
+import com.netflix.spinnaker.orca.jackson.OrcaObjectMapper;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
 import javax.annotation.Nonnull;
+import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -35,9 +38,16 @@ public class ApiTask implements Task {
 
   @Nonnull
   public TaskResult execute(@Nonnull Stage stage) {
+    ObjectMapper objectMapper = OrcaObjectMapper.newInstance();
+
     TaskResult result;
-    StageInput stageInput = new StageInput();
-    stageInput.setInput(stage.getContext());
+    ResolvableType resolvedType = ResolvableType.forClass(apiStage.getClass());
+    resolvedType.resolve();
+
+    ResolvableType inputType = resolvedType.getGeneric(0);
+
+    StageInput stageInput =
+        new StageInput(objectMapper.convertValue(stage.getContext(), inputType.getRawClass()));
     StageOutput outputs = apiStage.execute(stageInput);
     switch (outputs.getStatus()) {
       case TERMINAL:
