@@ -25,10 +25,16 @@ import com.netflix.spinnaker.orca.api.StageOutput;
 import com.netflix.spinnaker.orca.jackson.OrcaObjectMapper;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.Map;
 import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.ResolvableType;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class ApiTask implements Task {
   private com.netflix.spinnaker.orca.api.Stage apiStage;
@@ -41,40 +47,43 @@ public class ApiTask implements Task {
   public TaskResult execute(@Nonnull Stage stage) {
     ObjectMapper objectMapper = OrcaObjectMapper.newInstance();
 
-    TaskResult result;
+    ExecutionStatus status;
     try {
-      Method method = apiStage.getClass().getMethod("execute");
-      ResolvableType resolvedType = ResolvableType.forMethodParameter(method, 1);
-      resolvedType.resolve();
-
-      ResolvableType inputType = resolvedType.getGeneric(0);
+      Class[] cArg = new Class[1];
+      cArg[0] = StageInput.class;
+      Method method = apiStage.getClass().getMethod("execute", cArg);
+      Type type = ResolvableType.forMethodParameter(method, 0).getGeneric().getType();
+      Map<TypeVariable, Type> typeVariableMap =
+          GenericTypeResolver.getTypeVariableMap(apiStage.getClass());
 
       StageInput stageInput =
-          new StageInput(objectMapper.convertValue(stage.getContext(), inputType.getRawClass()));
+          new StageInput(
+              objectMapper.convertValue(
+                  stage.getContext(), GenericTypeResolver.resolveType(type, typeVariableMap)));
       StageOutput outputs = apiStage.execute(stageInput);
       switch (outputs.getStatus()) {
         case TERMINAL:
-          result = TaskResult.ofStatus(ExecutionStatus.TERMINAL);
+          status = ExecutionStatus.TERMINAL;
           break;
         case RUNNING:
-          result = TaskResult.ofStatus(ExecutionStatus.RUNNING);
+          status = ExecutionStatus.RUNNING;
           break;
         case COMPLETED:
-          result = TaskResult.ofStatus(ExecutionStatus.SUCCEEDED);
+          status = ExecutionStatus.SUCCEEDED;
           break;
         case NOT_STARTED:
-          result = TaskResult.ofStatus(ExecutionStatus.NOT_STARTED);
+          status = ExecutionStatus.NOT_STARTED;
           break;
         default:
-          result = TaskResult.ofStatus(ExecutionStatus.FAILED_CONTINUE);
+          status = ExecutionStatus.FAILED_CONTINUE;
           break;
       }
-
-      return result;
     } catch (Exception e) {
-      // TODO properly handle exeception
+      log.error("Cannot execute stage " + apiStage.getName());
+      log.error(e.getMessage());
+      status = ExecutionStatus.TERMINAL;
     }
 
-    return null;
+    return TaskResult.ofStatus(status);
   }
 }
