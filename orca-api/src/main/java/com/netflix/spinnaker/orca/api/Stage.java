@@ -19,6 +19,8 @@ package com.netflix.spinnaker.orca.api;
 import com.google.common.annotations.Beta;
 
 @Beta
-public interface Stage {
-  StageOutput execute(StageInput stageInput);
+public interface Stage<T> {
+  <T> StageOutput execute(StageInput<T> stageInput);
+
+  String getName();
 }
