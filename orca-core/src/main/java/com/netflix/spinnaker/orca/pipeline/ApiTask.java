@@ -53,14 +53,14 @@ public class ApiTask implements Task {
     try {
       List<Class<?>> cArg = Arrays.asList(StageInput.class);
       Method method = apiStage.getClass().getMethod("execute", cArg.toArray(new Class[0]));
-      Type type = ResolvableType.forMethodParameter(method, 0).getGeneric().getType();
+      Type inputType = ResolvableType.forMethodParameter(method, 0).getGeneric().getType();
       Map<TypeVariable, Type> typeVariableMap =
           GenericTypeResolver.getTypeVariableMap(apiStage.getClass());
 
       StageInput stageInput =
           new StageInput(
               objectMapper.convertValue(
-                  stage.getContext(), GenericTypeResolver.resolveType(type, typeVariableMap)));
+                  stage.getContext(), GenericTypeResolver.resolveType(inputType, typeVariableMap)));
       StageOutput outputs = apiStage.execute(stageInput);
       switch (outputs.getStatus()) {
         case TERMINAL:
