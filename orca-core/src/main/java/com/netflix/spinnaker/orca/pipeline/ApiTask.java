@@ -50,6 +50,8 @@ public class ApiTask implements Task {
     ObjectMapper objectMapper = OrcaObjectMapper.newInstance();
 
     ExecutionStatus status;
+    StageOutput outputs = new StageOutput();
+
     try {
       List<Class<?>> cArg = Arrays.asList(StageInput.class);
       Method method = apiStage.getClass().getMethod("execute", cArg.toArray(new Class[0]));
@@ -61,7 +63,7 @@ public class ApiTask implements Task {
           new StageInput(
               objectMapper.convertValue(
                   stage.getContext(), GenericTypeResolver.resolveType(inputType, typeVariableMap)));
-      StageOutput outputs = apiStage.execute(stageInput);
+      outputs = apiStage.execute(stageInput);
       switch (outputs.getStatus()) {
         case TERMINAL:
           status = ExecutionStatus.TERMINAL;
@@ -85,6 +87,9 @@ public class ApiTask implements Task {
       status = ExecutionStatus.TERMINAL;
     }
 
-    return TaskResult.ofStatus(status);
+    return TaskResult.builder(status)
+        .context(outputs.getOutputs())
+        .outputs(outputs.getOutputs())
+        .build();
   }
 }
