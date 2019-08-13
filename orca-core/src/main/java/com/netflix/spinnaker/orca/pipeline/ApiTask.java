@@ -27,6 +27,8 @@ import com.netflix.spinnaker.orca.pipeline.model.Stage;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -49,9 +51,8 @@ public class ApiTask implements Task {
 
     ExecutionStatus status;
     try {
-      Class[] cArg = new Class[1];
-      cArg[0] = StageInput.class;
-      Method method = apiStage.getClass().getMethod("execute", cArg);
+      List<Class<?>> cArg = Arrays.asList(StageInput.class);
+      Method method = apiStage.getClass().getMethod("execute", cArg.toArray(new Class[0]));
       Type type = ResolvableType.forMethodParameter(method, 0).getGeneric().getType();
       Map<TypeVariable, Type> typeVariableMap =
           GenericTypeResolver.getTypeVariableMap(apiStage.getClass());
