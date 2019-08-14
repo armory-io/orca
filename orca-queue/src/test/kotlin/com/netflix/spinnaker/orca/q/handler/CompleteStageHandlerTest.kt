@@ -26,6 +26,9 @@ import com.netflix.spinnaker.orca.ExecutionStatus.STOPPED
 import com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED
 import com.netflix.spinnaker.orca.ExecutionStatus.TERMINAL
 import com.netflix.spinnaker.orca.StageResolver
+import com.netflix.spinnaker.orca.api.StageInput
+import com.netflix.spinnaker.orca.api.StageOutput
+import com.netflix.spinnaker.orca.api.StageStatus
 import com.netflix.spinnaker.orca.events.StageComplete
 import com.netflix.spinnaker.orca.exceptions.DefaultExceptionHandler
 import com.netflix.spinnaker.orca.exceptions.ExceptionHandler
@@ -143,6 +146,24 @@ object CompleteStageHandlerTest : SubjectSpek<CompleteStageHandler>({
     }
   }
 
+  val emptyApiStage = object : com.netflix.spinnaker.orca.api.Stage<Any> {
+    override fun getName() = "emptyApiStage"
+
+    override fun <Any> execute(input: StageInput<Any>): StageOutput {
+      return StageOutput()
+    }
+  }
+
+  val successfulApiStage = object : com.netflix.spinnaker.orca.api.Stage<Any> {
+    override fun getName() = "successfulApiStage"
+
+    override fun <Any> execute(input: StageInput<Any>): StageOutput {
+      val output = StageOutput()
+      output.status = StageStatus.COMPLETED
+      return output
+    }
+  }
+
   subject(GROUP) {
     CompleteStageHandler(
       queue,
@@ -167,6 +188,10 @@ object CompleteStageHandlerTest : SubjectSpek<CompleteStageHandler>({
             stageWithNothingButAfterStages,
             stageWithSyntheticOnFailure,
             emptyStage
+          ),
+          listOf(
+            emptyApiStage,
+            successfulApiStage
           )
         )
       )
@@ -1465,6 +1490,24 @@ object CompleteStageHandlerTest : SubjectSpek<CompleteStageHandler>({
           assertThat(pipeline.stageById(message.stageId).status).isEqualTo(TERMINAL)
         }
       }
+    }
+  }
+
+  given("api stage completed successfully") {
+    val pipeline = pipeline {
+      stage {
+        refId = "1"
+        type = successfulApiStage.name
+      }
+    }
+
+    val message = CompleteStage(pipeline.stageByRef("1"))
+    pipeline.stageById(message.stageId).apply {
+      status = SUCCEEDED
+    }
+
+    it("stage was successfully ran") {
+      assertThat(pipeline.stageById(message.stageId).status).isEqualTo(SUCCEEDED)
     }
   }
 })

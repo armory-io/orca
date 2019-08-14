@@ -24,6 +24,9 @@ import com.netflix.spinnaker.orca.ExecutionStatus.RUNNING
 import com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED
 import com.netflix.spinnaker.orca.ExecutionStatus.TERMINAL
 import com.netflix.spinnaker.orca.StageResolver
+import com.netflix.spinnaker.orca.api.StageInput
+import com.netflix.spinnaker.orca.api.StageOutput
+import com.netflix.spinnaker.orca.api.StageStatus
 import com.netflix.spinnaker.orca.events.StageStarted
 import com.netflix.spinnaker.orca.exceptions.ExceptionHandler
 import com.netflix.spinnaker.orca.fixture.pipeline
@@ -100,6 +103,16 @@ object StartStageHandlerTest : SubjectSpek<StartStageHandler>({
   val registry = NoopRegistry()
   val retryDelay = Duration.ofSeconds(5)
 
+  val runningApiStage = object : com.netflix.spinnaker.orca.api.Stage<Any> {
+    override fun getName() = "runningApiStage"
+
+    override fun <Any> execute(input: StageInput<Any>): StageOutput {
+      val output = StageOutput()
+      output.status = StageStatus.RUNNING
+      return output
+    }
+  }
+
   subject(GROUP) {
     StartStageHandler(
       queue,
@@ -118,6 +131,9 @@ object StartStageHandlerTest : SubjectSpek<StartStageHandler>({
             stageWithSyntheticAfterAndNoTasks,
             webhookStage,
             failPlanningStage
+          ),
+          listOf(
+            runningApiStage
           )
         )
       ),
@@ -134,6 +150,7 @@ object StartStageHandlerTest : SubjectSpek<StartStageHandler>({
   fun resetMocks() = reset(queue, repository, publisher, exceptionHandler)
 
   describe("starting a stage") {
+
     given("there is a single initial task") {
       val pipeline = pipeline {
         application = "foo"
@@ -1130,6 +1147,26 @@ object StartStageHandlerTest : SubjectSpek<StartStageHandler>({
 
       it("emits an error event") {
         verify(queue).push(isA<InvalidStageId>())
+      }
+    }
+
+    given("api stage") {
+      val pipeline = pipeline {
+        stage {
+          refId = "1"
+          type = runningApiStage.name
+        }
+      }
+
+      val message = StartStage(pipeline.stageByRef("1"))
+      pipeline.stageById(message.stageId).apply {
+        status = RUNNING
+      }
+
+      afterGroup(::resetMocks)
+
+      it("stage was successfully started") {
+        assertThat(pipeline.stageById(message.stageId).status).isEqualTo(RUNNING)
       }
     }
   }
