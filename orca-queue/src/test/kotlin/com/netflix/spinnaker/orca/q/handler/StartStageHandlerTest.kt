@@ -24,9 +24,10 @@ import com.netflix.spinnaker.orca.ExecutionStatus.RUNNING
 import com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED
 import com.netflix.spinnaker.orca.ExecutionStatus.TERMINAL
 import com.netflix.spinnaker.orca.StageResolver
-import com.netflix.spinnaker.orca.api.StageInput
-import com.netflix.spinnaker.orca.api.StageOutput
-import com.netflix.spinnaker.orca.api.StageStatus
+import com.netflix.spinnaker.orca.api.SimpleStage
+import com.netflix.spinnaker.orca.api.SimpleStageInput
+import com.netflix.spinnaker.orca.api.SimpleStageOutput
+import com.netflix.spinnaker.orca.api.SimpleStageStatus
 import com.netflix.spinnaker.orca.events.StageStarted
 import com.netflix.spinnaker.orca.exceptions.ExceptionHandler
 import com.netflix.spinnaker.orca.fixture.pipeline
@@ -103,12 +104,12 @@ object StartStageHandlerTest : SubjectSpek<StartStageHandler>({
   val registry = NoopRegistry()
   val retryDelay = Duration.ofSeconds(5)
 
-  val runningApiStage = object : com.netflix.spinnaker.orca.api.Stage<Any> {
+  val runningApiStage = object : SimpleStage<Any> {
     override fun getName() = "runningApiStage"
 
-    override fun <Any> execute(input: StageInput<Any>): StageOutput {
-      val output = StageOutput()
-      output.status = StageStatus.RUNNING
+    override fun <Any> execute(simpleStageInput: SimpleStageInput<Any>): SimpleStageOutput {
+      val output = SimpleStageOutput()
+      output.status = SimpleStageStatus.RUNNING
       return output
     }
   }

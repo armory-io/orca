@@ -17,27 +17,20 @@
 package com.netflix.spinnaker.orca.api;
 
 import com.google.common.annotations.Beta;
-import java.util.Map;
 
 @Beta
-public class StageOutput {
-  private StageStatus status;
+public class SimpleStageInput<T> {
+  private T value;
 
-  public void setStatus(StageStatus status) {
-    this.status = status;
+  public SimpleStageInput(T value) {
+    this.value = value;
   }
 
-  public StageStatus getStatus() {
-    return this.status;
+  public void setValue(T value) {
+    this.value = value;
   }
 
-  private Map outputs;
-
-  public void setOutputs(Map outputs) {
-    this.outputs = outputs;
-  }
-
-  public Map getOutputs() {
-    return this.outputs;
+  public T getValue() {
+    return this.value;
   }
 }

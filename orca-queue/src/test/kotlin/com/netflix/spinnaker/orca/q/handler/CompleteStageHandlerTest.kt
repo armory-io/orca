@@ -26,9 +26,10 @@ import com.netflix.spinnaker.orca.ExecutionStatus.STOPPED
 import com.netflix.spinnaker.orca.ExecutionStatus.SUCCEEDED
 import com.netflix.spinnaker.orca.ExecutionStatus.TERMINAL
 import com.netflix.spinnaker.orca.StageResolver
-import com.netflix.spinnaker.orca.api.StageInput
-import com.netflix.spinnaker.orca.api.StageOutput
-import com.netflix.spinnaker.orca.api.StageStatus
+import com.netflix.spinnaker.orca.api.SimpleStage
+import com.netflix.spinnaker.orca.api.SimpleStageInput
+import com.netflix.spinnaker.orca.api.SimpleStageOutput
+import com.netflix.spinnaker.orca.api.SimpleStageStatus
 import com.netflix.spinnaker.orca.events.StageComplete
 import com.netflix.spinnaker.orca.exceptions.DefaultExceptionHandler
 import com.netflix.spinnaker.orca.exceptions.ExceptionHandler
@@ -146,20 +147,20 @@ object CompleteStageHandlerTest : SubjectSpek<CompleteStageHandler>({
     }
   }
 
-  val emptyApiStage = object : com.netflix.spinnaker.orca.api.Stage<Any> {
+  val emptyApiStage = object : SimpleStage<Any> {
     override fun getName() = "emptyApiStage"
 
-    override fun <Any> execute(input: StageInput<Any>): StageOutput {
-      return StageOutput()
+    override fun <Any> execute(simpleStageInput: SimpleStageInput<Any>): SimpleStageOutput {
+      return SimpleStageOutput()
     }
   }
 
-  val successfulApiStage = object : com.netflix.spinnaker.orca.api.Stage<Any> {
+  val successfulApiStage = object : SimpleStage<Any> {
     override fun getName() = "successfulApiStage"
 
-    override fun <Any> execute(input: StageInput<Any>): StageOutput {
-      val output = StageOutput()
-      output.status = StageStatus.COMPLETED
+    override fun <Any> execute(simpleStageInput: SimpleStageInput<Any>): SimpleStageOutput {
+      val output = SimpleStageOutput()
+      output.status = SimpleStageStatus.COMPLETED
       return output
     }
   }

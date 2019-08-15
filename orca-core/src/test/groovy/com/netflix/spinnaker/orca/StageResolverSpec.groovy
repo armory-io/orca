@@ -16,8 +16,9 @@
 
 package com.netflix.spinnaker.orca
 
-import com.netflix.spinnaker.orca.api.StageInput
-import com.netflix.spinnaker.orca.api.StageOutput
+import com.netflix.spinnaker.orca.api.SimpleStage
+import com.netflix.spinnaker.orca.api.SimpleStageInput
+import com.netflix.spinnaker.orca.api.SimpleStageOutput
 import com.netflix.spinnaker.orca.pipeline.StageDefinitionBuilder
 import com.netflix.spinnaker.orca.pipeline.WaitStage
 import spock.lang.Specification
@@ -72,10 +73,10 @@ class StageResolverSpec extends Specification {
   class AliasedStageDefinitionBuilder implements StageDefinitionBuilder {
   }
 
-  class SimpleStage implements com.netflix.spinnaker.orca.api.Stage {
+  class SimpleStage implements SimpleStage {
     @Override
-    public StageOutput execute(StageInput input) {
-      return new StageOutput();
+    public SimpleStageOutput execute(SimpleStageInput input) {
+      return new SimpleStageOutput();
     }
 
     @Override

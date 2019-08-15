@@ -17,29 +17,29 @@
 package com.netflix.spinnaker.orca.pipeline
 
 import com.netflix.spinnaker.orca.ExecutionStatus
-import com.netflix.spinnaker.orca.api.Stage
-import com.netflix.spinnaker.orca.api.StageInput
-import com.netflix.spinnaker.orca.api.StageOutput
-import com.netflix.spinnaker.orca.api.StageStatus
+import com.netflix.spinnaker.orca.api.SimpleStage
+import com.netflix.spinnaker.orca.api.SimpleStageInput
+import com.netflix.spinnaker.orca.api.SimpleStageOutput
+import com.netflix.spinnaker.orca.api.SimpleStageStatus
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
-class ApiTaskSpec extends Specification {
-  private static class MyStage implements Stage<Object> {
+class SimpleTaskSpec extends Specification {
+  private static class MyStage implements SimpleStage<Object> {
     @Override
     String getName() {
       return "myStage"
     }
 
     @Override
-    <Object> StageOutput execute(StageInput<Object> input) {
-      StageOutput output = new StageOutput()
+    <Object> SimpleStageOutput execute(SimpleStageInput<Object> input) {
+      SimpleStageOutput output = new SimpleStageOutput()
 
       Map<String, String> stageOutput = new HashMap<>()
       stageOutput.put("hello", "world")
 
-      output.setStatus(StageStatus.COMPLETED)
+      output.setStatus(SimpleStageStatus.COMPLETED)
       output.setOutputs(stageOutput)
       return output
     }
@@ -51,7 +51,7 @@ class ApiTaskSpec extends Specification {
   @Unroll
   def "should check dynamic config property"() {
     when:
-    def task = new ApiTask(myStage)
+    def task = new SimpleTask(myStage)
     def results = task.execute(new com.netflix.spinnaker.orca.pipeline.model.Stage())
 
     then:

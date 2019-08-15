@@ -19,9 +19,8 @@ package com.netflix.spinnaker.orca.api;
 import com.google.common.annotations.Beta;
 
 @Beta
-public enum StageStatus {
-  TERMINAL,
-  RUNNING,
-  COMPLETED,
-  NOT_STARTED
+public interface SimpleStage<T> {
+  <T> SimpleStageOutput execute(SimpleStageInput<T> simpleStageInput);
+
+  String getName();
 }

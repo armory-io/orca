@@ -19,18 +19,9 @@ package com.netflix.spinnaker.orca.api;
 import com.google.common.annotations.Beta;
 
 @Beta
-public class StageInput<T> {
-  private T value;
-
-  public StageInput(T value) {
-    this.value = value;
-  }
-
-  public void setValue(T value) {
-    this.value = value;
-  }
-
-  public T getValue() {
-    return this.value;
-  }
+public enum SimpleStageStatus {
+  TERMINAL,
+  RUNNING,
+  COMPLETED,
+  NOT_STARTED
 }

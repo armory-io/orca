@@ -20,8 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.spinnaker.orca.ExecutionStatus;
 import com.netflix.spinnaker.orca.Task;
 import com.netflix.spinnaker.orca.TaskResult;
-import com.netflix.spinnaker.orca.api.StageInput;
-import com.netflix.spinnaker.orca.api.StageOutput;
+import com.netflix.spinnaker.orca.api.SimpleStage;
+import com.netflix.spinnaker.orca.api.SimpleStageInput;
+import com.netflix.spinnaker.orca.api.SimpleStageOutput;
 import com.netflix.spinnaker.orca.jackson.OrcaObjectMapper;
 import com.netflix.spinnaker.orca.pipeline.model.Stage;
 import java.lang.reflect.Method;
@@ -39,11 +40,11 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class ApiTask implements Task {
-  private com.netflix.spinnaker.orca.api.Stage apiStage;
+public class SimpleTask implements Task {
+  private SimpleStage simpleStage;
 
-  ApiTask(@Nullable com.netflix.spinnaker.orca.api.Stage apiStage) {
-    this.apiStage = apiStage;
+  SimpleTask(@Nullable SimpleStage simpleStage) {
+    this.simpleStage = simpleStage;
   }
 
   @Nonnull
@@ -51,20 +52,20 @@ public class ApiTask implements Task {
     ObjectMapper objectMapper = OrcaObjectMapper.newInstance();
 
     ExecutionStatus status;
-    StageOutput outputs = new StageOutput();
+    SimpleStageOutput outputs = new SimpleStageOutput();
 
     try {
-      List<Class<?>> cArg = Arrays.asList(StageInput.class);
-      Method method = apiStage.getClass().getMethod("execute", cArg.toArray(new Class[0]));
+      List<Class<?>> cArg = Arrays.asList(SimpleStageInput.class);
+      Method method = simpleStage.getClass().getMethod("execute", cArg.toArray(new Class[0]));
       Type inputType = ResolvableType.forMethodParameter(method, 0).getGeneric().getType();
       Map<TypeVariable, Type> typeVariableMap =
-          GenericTypeResolver.getTypeVariableMap(apiStage.getClass());
+          GenericTypeResolver.getTypeVariableMap(simpleStage.getClass());
 
-      StageInput stageInput =
-          new StageInput(
+      SimpleStageInput simpleStageInput =
+          new SimpleStageInput(
               objectMapper.convertValue(
                   stage.getContext(), GenericTypeResolver.resolveType(inputType, typeVariableMap)));
-      outputs = apiStage.execute(stageInput);
+      outputs = simpleStage.execute(simpleStageInput);
       switch (outputs.getStatus()) {
         case TERMINAL:
           status = ExecutionStatus.TERMINAL;
@@ -83,7 +84,7 @@ public class ApiTask implements Task {
           break;
       }
     } catch (Exception e) {
-      log.error("Cannot execute stage " + apiStage.getName());
+      log.error("Cannot execute stage " + simpleStage.getName());
       log.error(e.getMessage());
       status = ExecutionStatus.TERMINAL;
     }

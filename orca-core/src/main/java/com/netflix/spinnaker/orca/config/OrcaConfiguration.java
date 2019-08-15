@@ -25,7 +25,7 @@ import com.netflix.spinnaker.kork.expressions.ExpressionFunctionProvider;
 import com.netflix.spinnaker.orca.StageResolver;
 import com.netflix.spinnaker.orca.Task;
 import com.netflix.spinnaker.orca.TaskResolver;
-import com.netflix.spinnaker.orca.api.Stage;
+import com.netflix.spinnaker.orca.api.SimpleStage;
 import com.netflix.spinnaker.orca.commands.ForceExecutionCancellationCommand;
 import com.netflix.spinnaker.orca.events.ExecutionEvent;
 import com.netflix.spinnaker.orca.events.ExecutionListenerAdapter;
@@ -189,8 +189,9 @@ public class OrcaConfiguration {
   @Bean
   public StageResolver stageResolver(
       Collection<StageDefinitionBuilder> stageDefinitionBuilders,
-      Optional<Collection<Stage>> apiStages) {
-    Collection<Stage> stages = apiStages.isPresent() ? apiStages.get() : new ArrayList<Stage>();
+      Optional<Collection<SimpleStage>> simpleStages) {
+    Collection<SimpleStage> stages =
+        simpleStages.isPresent() ? simpleStages.get() : new ArrayList<SimpleStage>();
     return new StageResolver(stageDefinitionBuilders, stages);
   }
 
