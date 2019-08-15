@@ -41,8 +41,7 @@ import com.netflix.spinnaker.orca.pipeline.persistence.ExecutionRepository;
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -189,8 +188,10 @@ public class OrcaConfiguration {
 
   @Bean
   public StageResolver stageResolver(
-      Collection<StageDefinitionBuilder> stageDefinitionBuilders, Collection<Stage> apiStages) {
-    return new StageResolver(stageDefinitionBuilders, apiStages);
+      Collection<StageDefinitionBuilder> stageDefinitionBuilders,
+      Optional<Collection<Stage>> apiStages) {
+    Collection<Stage> stages = apiStages.isPresent() ? apiStages.get() : new ArrayList<Stage>();
+    return new StageResolver(stageDefinitionBuilders, stages);
   }
 
   @Bean(name = EVENT_LISTENER_FACTORY_BEAN_NAME)

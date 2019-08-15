@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.ResolvableType;
@@ -41,7 +42,7 @@ import org.springframework.stereotype.Component;
 public class ApiTask implements Task {
   private com.netflix.spinnaker.orca.api.Stage apiStage;
 
-  ApiTask(com.netflix.spinnaker.orca.api.Stage apiStage) {
+  ApiTask(@Nullable com.netflix.spinnaker.orca.api.Stage apiStage) {
     this.apiStage = apiStage;
   }
 
