@@ -1,6 +1,6 @@
 Orca
 ====
-[![Build Status](https://api.travis-ci.org/spinnaker/orca.svg?branch=master)](https://travis-ci.org/spinnaker/orca)
+[![Build Status](https://travis-ci.com/GoodRx/orca.svg?branch=master)](https://travis-ci.com/GoodRx/orca)
 
 ![Orca Logo](logo.jpg?raw=true)
 
