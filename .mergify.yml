@@ -1,3 +1,4 @@
+---
 pull_request_rules:
   - name: Automatically merge on CI success and review
     conditions:
@@ -12,9 +13,9 @@ pull_request_rules:
         add: ["auto merged"]
   - name: Automatically merge PRs from maintainers on CI success and review
     conditions:
-    - status-success=continuous-integration/travis-ci/pr
-    - "label=ready to merge"
-    - "author=@oss-approvers"
+      - status-success=continuous-integration/travis-ci/pr
+      - "label=ready to merge"
+      - "author=@oss-approvers"
     actions:
       merge:
         method: squash

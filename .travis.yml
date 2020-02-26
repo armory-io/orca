@@ -12,7 +12,7 @@ jobs:
       before_cache: gradle/prepCaches.sh
       cache:
         directories:
-        - $HOME/.gradle
+          - $HOME/.gradle
       install: ./gradlew --parallel build
       script: ./gradlew --parallel test
 
@@ -22,6 +22,13 @@ jobs:
       script:
         - docker build -f Dockerfile.compile .
         - docker build -f Dockerfile.ubuntu .
+
+    - name: pre-commit checks
+      language: python
+      python: '3.7'
+      script:
+        - pip install -U pip pre-commit
+        - pre-commit run -a
 
 branches:
   only:
