@@ -2,18 +2,26 @@
 os: linux
 dist: bionic
 group: stable vm_type=n1-standard-8
+language: shell
 
-language: java
-jdk:
-  - openjdk8
+jobs:
+  include:
+    - name: gradle build and test
+      language: java
+      java: openjdk8
+      before_cache: gradle/prepCaches.sh
+      cache:
+        directories:
+        - $HOME/.gradle
+      install: ./gradlew --parallel build
+      script: ./gradlew --parallel test
 
-install: ./gradlew --parallel build
-script: ./gradlew --parallel test
-
-before_cache: gradle/prepCaches.sh
-cache:
-  directories:
-  - $HOME/.gradle
+    - name: docker build
+      services:
+        - docker
+      script:
+        - docker build -f Dockerfile.compile .
+        - docker build -f Dockerfile.ubuntu .
 
 branches:
   only:
