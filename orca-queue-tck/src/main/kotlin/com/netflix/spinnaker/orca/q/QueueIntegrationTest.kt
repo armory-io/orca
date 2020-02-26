@@ -392,7 +392,7 @@ abstract class QueueIntegrationTest {
   }
 
   @Test
-  fun `stages set to allow failure but fail the pipeline will run to completion but then mark the pipeline failed`() {
+  fun `stages that allow failures but fail the pipeline`() {
     val pipeline = pipeline {
       application = "spinnaker"
       stage {
@@ -495,7 +495,7 @@ abstract class QueueIntegrationTest {
   }
 
   @Test
-  fun `terminal pipeline immediately cancels stages in other branches where tasks have long backoff times`() {
+  fun `terminal pipeline immediately cancels stages in other branches`() {
     val pipeline = pipeline {
       application = "spinnaker"
       stage {
