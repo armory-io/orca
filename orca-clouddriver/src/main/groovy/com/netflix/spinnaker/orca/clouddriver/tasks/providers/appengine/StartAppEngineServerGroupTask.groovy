@@ -24,4 +24,3 @@ import org.springframework.stereotype.Component
 class StartAppEngineServerGroupTask extends AbstractServerGroupTask {
   String serverGroupAction = StartAppEngineServerGroupStage.PIPELINE_CONFIG_TYPE
 }
-

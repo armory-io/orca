@@ -32,4 +32,3 @@ class AssociateElasticIpStage implements StageDefinitionBuilder {
       .withTask("associateElasticIp", AssociateElasticIpTask)
   }
 }
-

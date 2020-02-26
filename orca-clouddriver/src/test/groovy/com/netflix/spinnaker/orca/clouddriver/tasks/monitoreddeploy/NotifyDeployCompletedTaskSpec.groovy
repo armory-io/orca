@@ -169,5 +169,3 @@ class NotifyDeployCompletedTaskSpec extends Specification {
     result.status == ExecutionStatus.SUCCEEDED
   }
 }
-
-

@@ -36,4 +36,3 @@ class DestroyJobStage implements StageDefinitionBuilder {
       .withTask("forceCacheRefresh", DestroyJobForceCacheRefreshTask)
   }
 }
-

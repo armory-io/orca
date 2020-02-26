@@ -25,4 +25,3 @@ else
   echo -e 'WARN: Should not be here => Branch ['$TRAVIS_BRANCH']  Tag ['$TRAVIS_TAG']  Pull Request ['$TRAVIS_PULL_REQUEST']'
   $GRADLE build
 fi
-

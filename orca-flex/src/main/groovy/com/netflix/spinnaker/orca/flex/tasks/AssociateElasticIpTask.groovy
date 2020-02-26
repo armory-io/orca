@@ -37,4 +37,3 @@ class AssociateElasticIpTask extends AbstractElasticIpTask {
     return "associateeip"
   }
 }
-

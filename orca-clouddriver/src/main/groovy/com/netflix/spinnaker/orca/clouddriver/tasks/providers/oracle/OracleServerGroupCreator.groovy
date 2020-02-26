@@ -49,4 +49,3 @@ class OracleServerGroupCreator implements ServerGroupCreator, DeploymentDetailsA
     return Optional.of("Oracle")
   }
 }
-

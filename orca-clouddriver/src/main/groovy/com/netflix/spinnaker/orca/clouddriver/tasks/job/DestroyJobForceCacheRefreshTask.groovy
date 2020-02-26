@@ -45,4 +45,3 @@ class DestroyJobForceCacheRefreshTask extends AbstractCloudProviderAwareTask imp
     TaskResult.ofStatus(ExecutionStatus.SUCCEEDED)
   }
 }
-

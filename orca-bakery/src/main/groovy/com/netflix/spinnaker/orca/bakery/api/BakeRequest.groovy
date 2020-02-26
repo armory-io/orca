@@ -91,4 +91,3 @@ class BakeRequest {
     ebs, s3, docker
   }
 }
-

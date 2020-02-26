@@ -29,4 +29,3 @@ class CaptureSourceServerGroupCapacityStage implements StageDefinitionBuilder {
       .withTask("snapshotSourceServerGroup", CaptureSourceServerGroupCapacityTask)
   }
 }
-

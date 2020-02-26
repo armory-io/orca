@@ -145,5 +145,3 @@ class AcaTaskStageSpec extends Specification {
     stage
   }
 }
-
-

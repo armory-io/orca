@@ -38,4 +38,3 @@ interface FlexService {
                                         @Path("region") String region,
                                         @Path("address") String address)
 }
-

@@ -48,4 +48,3 @@ class DcosJobRunner implements JobRunner {
     return [:]
   }
 }
-

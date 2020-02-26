@@ -672,4 +672,3 @@ abstract class ExecutionRepositoryTck<T extends ExecutionRepository> extends Spe
     PIPELINE      | 2             || []
   }
 }
-

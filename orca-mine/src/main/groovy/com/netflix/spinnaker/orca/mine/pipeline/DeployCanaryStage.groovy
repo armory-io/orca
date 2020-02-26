@@ -235,4 +235,3 @@ class DeployCanaryStage extends ParallelDeployStage implements CloudProviderAwar
     return ((CanaryStage) canary.stageBuilder).cancel(canary.stage)
   }
 }
-

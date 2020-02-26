@@ -30,4 +30,3 @@ class UpsertAsgTagsStage extends UpsertServerGroupTagsStage {
     return "upsertAsgTags"
   }
 }
-

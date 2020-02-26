@@ -45,4 +45,3 @@ class DeregisterInstancesFromLoadBalancerStage implements StageDefinitionBuilder
       .withTask("waitForLoadBalancerState", WaitForDownInstanceHealthTask)
   }
 }
-

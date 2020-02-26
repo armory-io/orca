@@ -40,9 +40,9 @@ class CloudFormationForceCacheRefreshTaskSpec extends Specification {
 
   @Unroll
   void "should add scoping data if available"() {
-    given:      
+    given:
     task.cacheService = Mock(CloudDriverCacheService)
-    
+
     and:
     def stage = stage()
     stage.context.put("credentials", credentials)

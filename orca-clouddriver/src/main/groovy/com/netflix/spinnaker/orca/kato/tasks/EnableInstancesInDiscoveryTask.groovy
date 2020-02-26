@@ -28,4 +28,3 @@ class EnableInstancesInDiscoveryTask extends AbstractDiscoveryTask {
     return "enableInstancesInDiscovery"
   }
 }
-

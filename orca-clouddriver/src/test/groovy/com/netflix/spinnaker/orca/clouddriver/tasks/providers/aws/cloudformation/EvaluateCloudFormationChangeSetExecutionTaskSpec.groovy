@@ -136,4 +136,3 @@ class EvaluateCloudFormationChangeSetExecutionTaskSpec extends Specification {
         "ask"                  || Optional.of("ask")  | ExecutionStatus.SUCCEEDED
   }
 }
-

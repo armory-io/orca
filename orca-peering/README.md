@@ -1,21 +1,21 @@
 # Orca Peering
 
 This is an semi-experimental approach to solve the problem of having multiple `orca` installations (each with its own database) communicate changes with each other, for instance in a multi-region Spinnaker installation or during a database migration.
- 
+
 **Definitions:**
 * `peer`
-    An `orca` cluster whose database (can be a read replica) we copy data from. Each `orca` cluster has an ID, for example `us-east-1` or `us-west-2`.  
-    A peer is defined by specifying its database connection AND its ID (in the yaml config).  
+    An `orca` cluster whose database (can be a read replica) we copy data from. Each `orca` cluster has an ID, for example `us-east-1` or `us-west-2`.
+    A peer is defined by specifying its database connection AND its ID (in the yaml config).
     For example, `orca` cluster with ID `us-west-2` could peer `orca` cluster with ID `us-east-1`, and vice-versa
 
 * `partition`
-    The executions stored in a DB are tagged with a partition, this is synonymous with peer ID described above.  
-    When an execution is "peered" (copied) from a peer with ID `us-east-1` that execution will be persisted in our local database with the `partition` set to `us-east-1`.  
+    The executions stored in a DB are tagged with a partition, this is synonymous with peer ID described above.
+    When an execution is "peered" (copied) from a peer with ID `us-east-1` that execution will be persisted in our local database with the `partition` set to `us-east-1`.
     *Note:* for historical reasons, the partition has been omitted in the executions.
-    Therefore, an `orca` cluster will consider executions with `partition = NULL` OR `partition = MY_PARTITION_ID` to be owned by this cluster. 
+    Therefore, an `orca` cluster will consider executions with `partition = NULL` OR `partition = MY_PARTITION_ID` to be owned by this cluster.
 
 * `foreign executions`
-    Foreign executions are executions that show up in the local database but are marked with `partition` of our peer.  
+    Foreign executions are executions that show up in the local database but are marked with `partition` of our peer.
     These executions are essentially read-only and the current `orca` cluster can't perform any actions on these executions.
 
 
@@ -26,22 +26,22 @@ The peering mechanism accomplishes a few things:
 
 
 ### Execution peering
-Execution peering is essentially copying of executions from one database to another.  
+Execution peering is essentially copying of executions from one database to another.
 In a typical topology for `orca` a single `orca` cluster will use a single [sql] database.
 The database stores all execution history as well as the execution queue.
 The history needs to be peered but the queue not be peered/replicated as that would cause issues with duplicate executions, etc.
 (additionally, the queue is extremely high bandwidth/change rate so replicating it would be difficult/require a lot of overhead on the DB)
 
-Logic for peering lives in [PeeringAgent.kt](./src/main/kotlin/com/netflix/spinnaker/orca/peering/PeeringAgent.kt), see comments for details on the algorithm.  
+Logic for peering lives in [PeeringAgent.kt](./src/main/kotlin/com/netflix/spinnaker/orca/peering/PeeringAgent.kt), see comments for details on the algorithm.
 At a high level the idea is:
 * Given a peer ID and its database connection (can be pointed to readonly replica)
 * Mirror all foreign executions with the specified peer ID to the local database
 * During copy, all executions get annotated as coming from the specified peer (`partition` column)
-* Any attempt to operate on a foreign execution (one with `partition != our ID`) will fail 
+* Any attempt to operate on a foreign execution (one with `partition != our ID`) will fail
 
 
 ### Taking actions on foreign executions
-The user can perform the following actions on an execution via the UI/API (`orca` mutates the execution based on these actions):  
+The user can perform the following actions on an execution via the UI/API (`orca` mutates the execution based on these actions):
 * *cancel* an execution
 * *pause* an execution
 * *resume* an execution
@@ -49,10 +49,10 @@ The user can perform the following actions on an execution via the UI/API (`orca
 * *delete* an execution
 
 These operations must take place on the cluster/instance that owns the execution.
-TBD 
+TBD
 
 
-### Taking ownership of an execution 
+### Taking ownership of an execution
 TBD
 
 
@@ -74,7 +74,7 @@ pollers:
     poolName: foreign
     id: us-west-2
     intervalMs: 5000   # This is the default value
-    threadCount: 30    # This is the default value 
+    threadCount: 30    # This is the default value
     chunkSize: 100     # This is the default value
     clockDriftMs: 5000 # This is the default value
 
@@ -99,7 +99,7 @@ sql:
       connectionTimeoutMs: 5000
       validationTimeoutMs: 5000
       maxPoolSize: ${pollers.peering.threadCount}
-``` 
+```
 
 | Parameter | Default | Notes |
 |-----------|---------|-------|
@@ -116,13 +116,13 @@ The following metrics are emitted by the peering agent and can/should be used fo
 
 | Parameter | Notes |
 |-----------|-------|
-|`pollers.peering.lag`              | Timer (seconds) of how long it takes to perform a single migration loop, this + the agent `intervalMs` is the effective lag. This should be a fairly steady number | 
-|`pollers.peering.numPeered`        | Counter of number of copied executions (should look fairly steady - i.e. mirror the number of active executions) | 
-|`pollers.peering.numDeleted`       | Counter of number of deleted executions | 
-|`pollers.peering.numStagesDeleted` | Counter of number of stages deleted during copy, purely informational| 
-|`pollers.peering.numErrors`        | Counter of errors encountered during execution copying (this should be alerted on) | 
+|`pollers.peering.lag`              | Timer (seconds) of how long it takes to perform a single migration loop, this + the agent `intervalMs` is the effective lag. This should be a fairly steady number |
+|`pollers.peering.numPeered`        | Counter of number of copied executions (should look fairly steady - i.e. mirror the number of active executions) |
+|`pollers.peering.numDeleted`       | Counter of number of deleted executions |
+|`pollers.peering.numStagesDeleted` | Counter of number of stages deleted during copy, purely informational|
+|`pollers.peering.numErrors`        | Counter of errors encountered during execution copying (this should be alerted on) |
 
-If using the peering feature, it is recommended that you configure alerts for the following metrics:  
+If using the peering feature, it is recommended that you configure alerts for the following metrics:
 * `pollers.peering.numErrors > 0`
 * `pollers.peering.numPeered == 0` for some period of time (depends on your steady stage of active executions)
 * `pollers.peering.lag > 60` for some period of time (~3 minutes)
@@ -134,4 +134,4 @@ The following dynamic properties are exposed and can be controlled at runtime vi
 | Property | Default | Notes |
 |----------|---------|-------|
 |`pollers.peering.enabled`          | `true` | if set to `false` turns off all peering |
-|`pollers.peering.<PEERID>.enabled` | `true` | if set to `false` turns off all peering for peer with given ID | 
+|`pollers.peering.<PEERID>.enabled` | `true` | if set to `false` turns off all peering for peer with given ID |
