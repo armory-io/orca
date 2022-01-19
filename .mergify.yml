@@ -1,7 +1,7 @@
 queue_rules:
- - name: default
-   conditions:
-     - status-success=build
+  - name: default
+    conditions:
+      - status-success=build
 
 pull_request_rules:
   - name: Automatically merge on CI success and review
@@ -14,7 +14,7 @@ pull_request_rules:
       queue:
         method: squash
         name: default
-      label:
+      label: 
         add: ["auto merged"]
   - name: Automatically merge release branch changes on CI success and release manager review
     conditions:
