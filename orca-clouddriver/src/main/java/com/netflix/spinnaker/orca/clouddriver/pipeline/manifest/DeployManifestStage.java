@@ -153,7 +153,7 @@ public class DeployManifestStage extends ExpressionAwareStageDefinitionBuilder {
           (name, manifest) -> {
             var oldManifestIsUnstable =
                 this.manifestOperationsHelper.previousDeploymentNeitherStableNorFailed(
-                    manifest.getAccount(), name);
+                    manifest.getAccount(), name, manifest.getNamespace());
             var nextStageType =
                 oldManifestIsUnstable
                     ? DeleteManifestStage.PIPELINE_CONFIG_TYPE
@@ -249,8 +249,9 @@ public class DeployManifestStage extends ExpressionAwareStageDefinitionBuilder {
      * @param name of the manifest
      * @return true, if manifest was not deployed correctly and waits to get stable, false otherwise
      */
-    boolean previousDeploymentNeitherStableNorFailed(String account, String name) {
-      var oldManifest = this.oortService.getManifest(account, name, false);
+    boolean previousDeploymentNeitherStableNorFailed(
+        String account, String name, String namespace) {
+      var oldManifest = this.oortService.getManifest(account, namespace, name, false);
 
       var status = oldManifest.getStatus();
       var notStable = !status.getStable().isState();
