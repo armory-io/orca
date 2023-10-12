@@ -90,7 +90,12 @@ class DependentPipelineStarter implements ApplicationContextAware {
     // for now we identified DeployManifestStage
     // in ResolveDeploySourceManifestTask using ManifestEvaluator.getRequiredArtifacts
     def requiredArtifactIds = pipelineConfig.get("stages", []).collectMany {
-      it.requiredArtifactIds ?: []
+      def inputArtifacts = it.requiredArtifactIds ?: []
+      if (it.inputArtifact) {
+        inputArtifacts.add(it.inputArtifact?.id)
+      }
+      // TODO: add inputArtifacts com/netflix/spinnaker/orca/bakery/tasks/manifests/BakeManifestContext.java:52
+      return inputArtifacts
     }
     expectedArtifactIds.addAll(requiredArtifactIds)
 
