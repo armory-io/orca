@@ -15,18 +15,56 @@
  */
 
 plugins {
+  id 'nebula.maven-publish' version '8.1.0'
+  id "com.jfrog.artifactory" version "4.13.0"
+  id 'nebula.release' version '15.0.2'
   id 'io.spinnaker.project' version "$spinnakerGradleVersion" apply false
   id "org.jetbrains.kotlin.jvm" version "$kotlinVersion" apply false
   id "org.jetbrains.kotlin.plugin.allopen" version "$kotlinVersion" apply false
   id "io.gitlab.arturbosch.detekt" version "1.17.1" apply false
   id "org.jetbrains.dokka" version "1.4.32" apply false
 }
+artifactory {
+  contextUrl = "https://armory.jfrog.io/armory"
+  //The base Artifactory URL if not overridden by the publisher/resolver
+  publish {
+    repository {
+      repoKey = "armory-gradle-local"
+      username = "${artifactory_user}"
+      password = "${artifactory_password}"
+      maven = true
+    }
+    defaults {
+      publications('nebula', 'defaultSettingsPluginMarkerMaven', 'pluginsDownloaderPluginMarkerMaven')
+    }
+  }
+  resolve {
+    repository {
+      repoKey = "gradle-release"
+      username = "${artifactory_user}"
+      password = "${artifactory_password}"
+      maven = true
 
+    }
+  }
+  clientConfig.info.setBuildNumber(getProperties().get("JFROG_CLI_BUILD_NUMBER", project.getVersion()).toString())
+
+}
 allprojects {
+  apply plugin: 'com.jfrog.artifactory'
   apply plugin: 'io.spinnaker.project'
 
   group = "io.spinnaker.orca"
-
+  repositories {
+    maven {
+      url 'https://armory.jfrog.io/armory/armory-gradle-local'
+      credentials {
+        username = "${artifactory_user}"
+        password = "${artifactory_password}"
+      }
+    }
+//    mavenLocal()
+  }
   tasks.withType(JavaExec) {
     if (System.getProperty('DEBUG', 'false') == 'true') {
       jvmArgs '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8183'
@@ -36,11 +74,15 @@ allprojects {
 
 subprojects {
 
-  if ([korkVersion, fiatVersion].any { it.endsWith("-SNAPSHOT") }) {
-    logger.info("Enabling mavenLocal")
-    repositories {
-      mavenLocal()
+  repositories {
+    maven {
+      url 'https://armory.jfrog.io/armory/armory-gradle-local'
+      credentials {
+        username = "${artifactory_user}"
+        password = "${artifactory_password}"
+      }
     }
+//    mavenLocal()
   }
 
   if (name != "orca-bom" && name != "orca-api") {
@@ -75,5 +117,9 @@ subprojects {
     }
   }
 }
-
+task printVersion {
+  doLast {
+    print version
+  }
+}
 defaultTasks ":orca-web:run"
