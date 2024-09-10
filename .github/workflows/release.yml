@@ -55,7 +55,7 @@ jobs:
           echo RELEASE_VERSION="${RELEASE_VERSION}" >> $GITHUB_OUTPUT
       - name: Publish Release
         run: |
-          ./gradlew test artifactoryPublish $GRADLE_ARGS -Pversion=0.0.3
+          ./gradlew test artifactoryPublish $GRADLE_ARGS -Pversion=2.32.1
           BUILD_NUMBER=$(./gradlew -Prelease.useLastTag=true $GRADLE_ARGS  printVersion|grep VERSION|awk -F: '{print $2}')
           echo "Running build scan against $BUILD_NUMBER"
           jfrog rt bs "kork" "$BUILD_NUMBER" $JFROG_ARGS
