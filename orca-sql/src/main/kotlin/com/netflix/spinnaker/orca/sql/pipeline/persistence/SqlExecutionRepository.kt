@@ -424,7 +424,7 @@ class SqlExecutionRepository(
   }
 
   private fun retrieve(type: ExecutionType, criteria: ExecutionCriteria, partition: String?, includeNestedExecutions: Boolean = false): Observable<PipelineExecution> {
-    withPool(poolName) {
+    withPool(readPoolName) {
       val select = jooq.selectExecutions(
         type,
         fields = selectExecutionFields(compressionProperties) + field("status"),
