@@ -18,7 +18,6 @@ apply from: "$rootDir/gradle/kotlin.gradle"
 apply from: "$rootDir/gradle/spock.gradle"
 apply from: "$rootDir/gradle/spek.gradle"
 
-
 dependencies {
   api("de.huxhorn.sulky:de.huxhorn.sulky.ulid")
   api("io.spinnaker.kork:kork-artifacts")
@@ -71,4 +70,10 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-api")
+}
+test {
+  useJUnitPlatform()
+}
+tasks.named('test') {
+  jvmArgs += "--add-opens=java.base/java.util=ALL-UNNAMED"
 }
