@@ -182,12 +182,15 @@ class UserConfiguredUrlRestrictionsSpec extends Specification {
     validatedUri
 
     where:
+    // IPV6 when using HttpUrl - which we use for validation - requires the IPv6 raw
+    // addresses to be properly bracketed. Otherwise you get dangerous parsing issues.
     uri << [
         'https://192.168.0.1',
         'http://172.16.0.1',
         'http://10.0.0.1',
-        'https://fd12:3456:789a:1::1',
-        'https://fc12:3456:789a:1::1',
+        // Note: IPv6 without brackets is not valid for HttpUrl.parse()
+        // 'https://fd12:3456:789a:1::1',
+        // 'https://fc12:3456:789a:1::1',
         'https://[fd12:3456:789a:1::1]:8080',
         'https://[fc12:3456:789a:1::1]:8080'
     ]
@@ -266,6 +269,47 @@ class UserConfiguredUrlRestrictionsSpec extends Specification {
     uri << [
         "http://foobar.com",
         "https://barfoo.com"
+    ]
+  }
+
+  @Unroll
+  def 'should reject authority bypass attempt'() {
+    given:
+    // Test that URLs with userinfo (username:password@) in authority don't bypass validation
+    // The old vulnerable code would extract "example.com" from userinfo instead of the actual host
+    UserConfiguredUrlRestrictions config = spyOn(new UserConfiguredUrlRestrictions.Builder()
+        .withAllowedHostnamesRegex("example.com").build())
+
+    when:
+    config.validateURI(uri)
+
+    then:
+    thrown(IllegalArgumentException.class)
+
+    where:
+    uri << [
+        'https://example.com:badpassword@host_with_underscore.com'
+    ]
+  }
+
+  @Unroll
+  def 'should allow legitimate underscore hosts when properly configured'() {
+    given:
+    // Test that legitimate underscore hosts still work when properly allowed
+    UserConfiguredUrlRestrictions config = spyOn(new UserConfiguredUrlRestrictions.Builder()
+        .withAllowedHostnamesRegex("host_with_underscore.com").build())
+
+    when:
+    // With HttpUrl, the actual host is correctly extracted as host_with_underscore.com
+    URI validatedUri = config.validateURI(uri)
+
+    then:
+    noExceptionThrown()
+    validatedUri
+
+    where:
+    uri << [
+        'https://example.com:badpassword@host_with_underscore.com'
     ]
   }
 }
