@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import okhttp3.HttpUrl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 
@@ -217,9 +218,17 @@ public class UserConfiguredUrlRestrictions {
     return InetAddresses.isInetAddress(host);
   }
 
-  public URI validateURI(String url) throws IllegalArgumentException {
+  public URI validateURI(String uri) throws IllegalArgumentException {
+    HttpUrl httpUrl = HttpUrl.parse(uri);
+    if (httpUrl == null) {
+      throw new IllegalArgumentException("Malformed URL: " + uri);
+    }
+    return validateURI(httpUrl);
+  }
+
+  public URI validateURI(HttpUrl url) throws IllegalArgumentException {
     try {
-      URI u = URI.create(url).normalize();
+      URI u = url.uri().normalize();
       if (!u.isAbsolute()) {
         throw new IllegalArgumentException("non absolute URI " + url);
       }
@@ -227,21 +236,9 @@ public class UserConfiguredUrlRestrictions {
         throw new IllegalArgumentException("unsupported URI scheme " + url);
       }
 
-      // fallback to `getAuthority()` in the event that the hostname contains an underscore and
-      // `getHost()` returns null
-      String host = u.getHost();
-      if (host == null) {
-        String authority = u.getAuthority();
-        if (authority != null) {
-          // Don't attempt to colon-substring ipv6 addresses
-          if (isIpAddress(authority)) {
-            host = authority;
-          } else {
-            int portIndex = authority.indexOf(":");
-            host = (portIndex > -1) ? authority.substring(0, portIndex) : authority;
-          }
-        }
-      }
+      // FIXED: Use HttpUrl.host() instead of vulnerable getAuthority() fallback
+      // HttpUrl properly parses URLs per RFC 3986, correctly handling userinfo in authority
+      String host = url.host();
 
       if (host == null || host.isEmpty()) {
         throw new IllegalArgumentException("Unable to determine host for the url provided " + url);
@@ -252,9 +249,7 @@ public class UserConfiguredUrlRestrictions {
             "Allowed Hostnames are not set, external HTTP requests are not enabled. Please configure 'user-configured-url-restrictions.allowedHostnamesRegex' in your orca config.");
       }
 
-      // Strip ipv6 brackets if present
-      // InetAddress.getHost() retains them, but other code doesn't quite understand
-      host = host.replace("[", "").replace("]", "");
+      // Note: IPv6 bracket stripping removed - HttpUrl.host() already handles this correctly
 
       if (isIpAddress(host) && rejectVerbatimIps) {
         throw new IllegalArgumentException("Verbatim IP addresses are not allowed");
