@@ -25,6 +25,7 @@ import com.netflix.spinnaker.kork.sql.test.SqlTestUtil
 import com.netflix.spinnaker.orca.api.pipeline.models.PipelineExecution
 import com.netflix.spinnaker.orca.front50.Front50Service
 import com.netflix.spinnaker.orca.jackson.OrcaObjectMapper
+import com.netflix.spinnaker.orca.pipeline.model.PipelineTrigger
 import com.netflix.spinnaker.orca.pipeline.model.support.TriggerDeserializer
 import com.netflix.spinnaker.orca.pipeline.util.ContextParameterProcessor
 import com.netflix.spinnaker.orca.sql.PipelineRefTriggerDeserializerSupplier
@@ -32,6 +33,7 @@ import com.netflix.spinnaker.orca.sql.pipeline.persistence.SqlExecutionRepositor
 import com.nhaarman.mockito_kotlin.mock
 import dev.minutest.junit.JUnit5Minutests
 import dev.minutest.rootContext
+import org.assertj.core.api.Assertions.assertThat
 import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.table
@@ -192,7 +194,19 @@ class TaskControllerTest : JUnit5Minutests {
             "test-app",
             clock.instant().minus(daysOfExecutionHistory, ChronoUnit.DAYS).minus(120, ChronoUnit.MINUTES).toEpochMilli(),
             clock.instant().minus(daysOfExecutionHistory, ChronoUnit.DAYS).minus(120, ChronoUnit.HOURS).toEpochMilli(),
-            "{\"id\": \"01JGVRQSZ1H2ZKHS0AJH2PGBGH\", \"type\": \"PIPELINE\", \"pipelineConfigId\": \"1\"}",
+            """
+              {
+                "id":"01JGVRQSZ1H2ZKHS0AJH2PGBGH",
+                "type":"PIPELINE",
+                "pipelineConfigId":"1",
+                "trigger":{
+                  "type":"webhook",
+                  "parameters":{
+                    "manifest":"something"
+                  }
+                }
+              }
+            """.trimIndent(),
             "SUCCEEDED"
           )
         )
@@ -334,6 +348,7 @@ class TaskControllerTest : JUnit5Minutests {
         val results = OrcaObjectMapper.getInstance().readValue(response.contentAsString, object : TypeReference<EvaluationResult>() {})
         expectThat(results.result).isEqualTo("01JGVRQSZ1H2ZKHS0AJH2PGBGH")
       }
+
     }
 
     context("execution retrieval with pipelineRef enabled") {
@@ -360,6 +375,26 @@ class TaskControllerTest : JUnit5Minutests {
         ).andReturn().response
         val results = OrcaObjectMapper.getInstance().readValue(response.contentAsString, object : TypeReference<EvaluationResult>() {})
         expectThat(results.result).isEqualTo("01JGVRQSZ1H2ZKHS0AJH2PGBGH")
+      }
+
+
+      test("Verify can get parent execution as needed with pipeline ref enabled") {
+        val response = subject.perform(
+          get("/pipelines")
+            .param("executionIds", "01JGVQBDS5YTVPEJVBST3SAAE6")
+            .param("includeNestedExecutions", "true")
+        ).andReturn().response
+        // INTENTIONAL string as orca will ALWAYS when pipelineRef enabled, when deserialization content
+        // translate it into a pipelineRef object.  AKA it's hard to query this data in orca with this...
+        assertThat(response.contentAsString).contains("manifest\":\"something\"")
+      }
+
+      // When we don't include the parameter, it should require users to selectively load the parent id
+      test("Verify with pipeline ref enabled we only get an execution id") {
+        val response = subject.perform(
+          get("/pipelines/01JGVQBDS5YTVPEJVBST3SAAE6").param("includeNestedExecutions", "false")
+        ).andReturn().response
+        assertThat(response.contentAsString).doesNotContain("manifest\":\"something\"")
       }
     }
   }

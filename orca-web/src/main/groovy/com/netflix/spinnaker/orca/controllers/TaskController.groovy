@@ -207,7 +207,8 @@ class TaskController {
     @RequestParam(value = "executionIds", required = false) String executionIds,
     @RequestParam(value = "limit", required = false) Integer limit,
     @RequestParam(value = "statuses", required = false) String statuses,
-    @RequestParam(value = "expand", defaultValue = "true") boolean expand) {
+    @RequestParam(value = "expand", defaultValue = "true") boolean expand,
+    @RequestParam(value = "includeNestedExecutions", defaultValue = "false") boolean includeNestedExecutions) {
     statuses = statuses ?: ExecutionStatus.values()*.toString().join(",")
     limit = limit ?: 1
     ExecutionCriteria executionCriteria = new ExecutionCriteria(
@@ -228,7 +229,7 @@ class TaskController {
 
       List<PipelineExecution> executions = rx.Observable.from(ids.collect {
         try {
-          executionRepository.retrieve(PIPELINE, it)
+          executionRepository.retrieve(PIPELINE, it, includeNestedExecutions)
         } catch (ExecutionNotFoundException e) {
           null
         }
