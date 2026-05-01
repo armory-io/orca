@@ -23,6 +23,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "lambda")
 public class LambdaConfigurationProperties {
 
+  private boolean prefixApplicationNameToFunction = true;
+
   private int cloudDriverReadTimeout = 60;
   private int cloudDriverConnectTimeout = 15;
   private int cacheRefreshRetryWaitTime = 15;
