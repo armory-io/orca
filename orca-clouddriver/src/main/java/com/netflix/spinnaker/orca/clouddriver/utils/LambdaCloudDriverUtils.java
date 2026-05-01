@@ -219,7 +219,7 @@ public class LambdaCloudDriverUtils {
     String acc = inp.getAccount();
     String fName = inp.getFunctionName();
     String appPrefix = String.format("%s-", inp.getAppName());
-    if (!fName.startsWith(appPrefix)) {
+    if (config.isPrefixApplicationNameToFunction() && !fName.startsWith(appPrefix)) {
       fName = String.format("%s-%s", inp.getAppName(), inp.getFunctionName());
     }
     String url = cloudDriverUrl + CLOUDDRIVER_GET_PATH;
