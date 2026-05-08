@@ -25,7 +25,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.header.HeaderWriterFilter;
 
 @Configuration
-@Order(Ordered.HIGHEST_PRECEDENCE + 5)
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class WebConfigOverrides extends WebSecurityConfigurerAdapter {
 
   @Override
