@@ -1,0 +1,48 @@
+orca-web/src/main/java/com/netflix/spinnaker/config/WebConfigOverrides.java
+  human 28
+  human 1-43
+---
+{
+  "attestations": [
+    {
+      "entries": [
+        {
+          "accepted_lines": 1,
+          "added_lines": 1,
+          "deleted_lines": 0,
+          "hash": "human",
+          "lines": "28",
+          "overridden_lines": 0
+        },
+        {
+          "accepted_lines": 42,
+          "added_lines": 0,
+          "deleted_lines": 1,
+          "hash": "human",
+          "lines": "1-43",
+          "overridden_lines": 0
+        }
+      ],
+      "file": "orca-web/src/main/java/com/netflix/spinnaker/config/WebConfigOverrides.java"
+    }
+  ],
+  "base_commit_sha": "067120e1c3ad37962499142ae5dbecef60035ba0",
+  "branch": "fixcve-2026-22732",
+  "commit_sha": "61a27d2e1a044fa0915e2accded89425c80c6fe2",
+  "commit_time": "2026-05-08T15:59:38-05:00",
+  "commit_type": "direct_commit",
+  "git_ai_version": "1.4.2",
+  "prompts": {
+    "human": {
+      "accepted_lines": 1,
+      "agent_id": null,
+      "human_author": "Jason McIntosh <jason.mcintosh@harness.io>",
+      "messages": [],
+      "overriden_lines": 0,
+      "total_additions": 1,
+      "total_deletions": 0
+    }
+  },
+  "repo": "git@github.com:armory-io/orca.git",
+  "schema_version": "authorship/3.0.0"
+}
